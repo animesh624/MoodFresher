@@ -164,20 +164,6 @@ function App() {
             <p>Typical delivery time 30–45 minutes.</p>
           </div>
         </div>
-
-        {view === 'menu' && (
-          <div className="contact-box">
-            <h4>Contact & Location</h4>
-            <table className="contact-table">
-              <tbody>
-                <tr><td>Phone</td><td><a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">+91 {WHATSAPP_NUMBER.slice(2)}</a></td></tr>
-                <tr><td>Address</td><td>27/17 Elgin Road, Civil Lines, Prayagraj, Uttar Pradesh</td></tr>
-                <tr><td>Min Order</td><td>₹199</td></tr>
-                <tr><td>Delivery Time</td><td>30–45 min</td></tr>
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
 
       {view === 'menu' && (
