@@ -46,6 +46,7 @@ function App() {
   const [activeCat, setActiveCat] = useState('All')
   const [navOpen, setNavOpen] = useState(false)
   const [view, setView] = useState('menu') // 'menu' | 'contact' | 'about'
+  const [carouselIdx, setCarouselIdx] = useState(0)
 
   // Navigation helpers: sync view with URL so Contact opens as a new page (pushState)
   const navigate = (newView) => {
@@ -114,6 +115,14 @@ function App() {
     document.title = 'MoodFresher — Cafe & Restaurant'
   }, [])
 
+  // Auto-scroll carousel every 8 seconds (slowed down)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCarouselIdx(prev => (prev + 1) % 3)
+    }, 8000)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <div className="app-root">
       <header className="topbar">
@@ -150,18 +159,25 @@ function App() {
       </section>
 
       <section className="info-section">
-        <div className="info-cards">
-          <div className="info-card">
-            <h4>Best Prices</h4>
-            <p>Order direct and save more — no middlemen.</p>
+        <div className="carousel-wrapper">
+          <div className="carousel-items" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
+            <div className="info-card carousel-item">
+              <h4>💰 Best Prices</h4>
+              <p>Order direct and save more — no middlemen.</p>
+            </div>
+            <div className="info-card carousel-item">
+              <h4>🍳 Freshly Prepared</h4>
+              <p>Made to order with fresh ingredients.</p>
+            </div>
+            <div className="info-card carousel-item">
+              <h4>🚗 Fast Delivery</h4>
+              <p>Typical delivery time 30–45 minutes.</p>
+            </div>
           </div>
-          <div className="info-card">
-            <h4>Freshly Prepared</h4>
-            <p>Made to order with fresh ingredients.</p>
-          </div>
-          <div className="info-card">
-            <h4>Fast Delivery</h4>
-            <p>Typical delivery time 30–45 minutes.</p>
+          <div className="carousel-dots">
+            {[0, 1, 2].map(i => (
+              <button key={i} className={`dot ${i === carouselIdx ? 'active' : ''}`} onClick={() => setCarouselIdx(i)}></button>
+            ))}
           </div>
         </div>
       </section>
@@ -264,10 +280,12 @@ function App() {
       )
       }
 
-      <div className="bottom-bar">
-        <div className="left">{cartCount} items • ₹{total}</div>
-        <button className="place" onClick={placeOrder} disabled={!canPlace}>{canPlace ? 'Place order on WhatsApp' : 'Enter details to order'}</button>
-      </div>
+      {view === 'menu' && cartCount > 0 && (
+        <div className="bottom-bar">
+          <div className="left">{cartCount} items • ₹{total}</div>
+          <button className="place" onClick={placeOrder} disabled={!canPlace}>{canPlace ? 'Place order on WhatsApp' : 'Enter details to order'}</button>
+        </div>
+      )}
 
     </div>
   )
