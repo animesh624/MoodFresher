@@ -14,7 +14,7 @@
     "enabled": true,
     "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "openTime": "17:00",
-    "closeTime": "23:00"
+    "closeTime": "22:00"
   },
   "items": [
     {
