@@ -396,7 +396,7 @@ function App() {
                   <span className="contact-icon">📞</span>
                   <div className="contact-text">
                     <div className="contact-label">Phone</div>
-                    <a className="contact-value" href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">+91 {WHATSAPP_NUMBER.slice(2)}</a>
+                    <a className="contact-value" href={`tel:+${WHATSAPP_NUMBER}`}>+91 {WHATSAPP_NUMBER.slice(2)}</a>
                   </div>
                 </div>
                 <div className="contact-card">
