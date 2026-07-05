@@ -2,40 +2,20 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import './App.css'
 
 import brandLogo from './resources/Logo.jpeg'
-import soyaChaapBiryani from './resources/SoyaChaap biryani.jpeg'
-import premiumThali from './resources/Premium Thali.jpeg'
-import mlaaiChaap from './resources/Mlaai Chaap.jpeg'
-import menu3 from './resources/menu3.jpeg'
-import menu2 from './resources/menu2.jpeg'
-import menu1 from './resources/menu1.jpeg'
-import manchurianNoodles from './resources/Manchurian Noodles.jpeg'
-import manchurianFriedRice from './resources/Manchurian Fried Rice.jpeg'
-import deluxThali from './resources/Delux Thaali.jpeg'
-import chilliPaneerNoodle from './resources/Chilli Paneer Noodle.jpeg'
-import chilliPaneerFriedRice from './resources/CHilli Paneer Fried Rice.jpeg'
-import chaapButterMasalaRumali from './resources/Chaap Butter Msala RUmali Roti.jpeg'
-import bahubaliThali from './resources/Bahubali Thali.jpeg'
-import afgaaniChaap from './resources/Afgaani chaap.jpeg'
-import achaariChaap from './resources/Achaari Chaap.jpeg'
 import itemsData from './data/items.json'
 
 const WHATSAPP_NUMBER = '918736066574'
 
-// Map photo names to imported images
-const photoMap = {
-  'SoyaChaap biryani.jpeg': soyaChaapBiryani,
-  'menu1.jpeg': menu1,
-  'Manchurian Noodles.jpeg': manchurianNoodles,
-  'Manchurian Fried Rice.jpeg': manchurianFriedRice,
-  'Chilli Paneer Noodle.jpeg': chilliPaneerNoodle,
-  'CHilli Paneer Fried Rice.jpeg': chilliPaneerFriedRice,
-  'Achaari Chaap.jpeg': achaariChaap,
-  'Afgaani chaap.jpeg': afgaaniChaap,
-  'Chaap Butter Msala RUmali Roti.jpeg': chaapButterMasalaRumali,
-  'Bahubali Thali.jpeg': bahubaliThali,
-  'Delux Thaali.jpeg': deluxThali,
-  'Premium Thali.jpeg': premiumThali,
-  'Mlaai Chaap.jpeg': mlaaiChaap,
+// Auto-load all menu images from resources folder using Vite's import.meta.glob
+const menuImages = import.meta.glob('./resources/*.jpeg', { eager: true, query: '?url', import: 'default' })
+
+// Build photoMap dynamically — extract filename from path
+const photoMap = {}
+for (const [path, module] of Object.entries(menuImages)) {
+  const filename = path.replace('./resources/', '')
+  if (filename !== 'Logo.jpeg') {
+    photoMap[filename] = module
+  }
 }
 
 // Build MENU from items.json with images
@@ -280,41 +260,45 @@ function App() {
         </nav>
       </div>
 
-      <section className="hero-banner">
-        <h2>Delicious Food, Delivered Fresh!</h2>
-        <p>Order Direct & Save More</p>
-        <div className="hero-actions">
-          <button className="primary" onClick={() => { const el = document.querySelector('.menu-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore our menu</button>
-          <button className="secondary" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Call / WhatsApp</button>
-        </div>
-      </section>
+      {view === 'menu' && (
+        <>
+          <section className="hero-banner">
+            <h2>Delicious Food, Delivered Fresh!</h2>
+            <p>Order Direct & Save More</p>
+            <div className="hero-actions">
+              <button className="primary" onClick={() => { const el = document.querySelector('.menu-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore our menu</button>
+              <button className="secondary" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Call / WhatsApp</button>
+            </div>
+          </section>
 
-      <section className="info-section">
-        <div className="carousel-wrapper" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-          <div className="carousel-items" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
-            <div className="carousel-item">
-              <span className="carousel-icon">💰</span>
-              <h4>Best Prices</h4>
-              <p>Order direct and save more — no middlemen, just great value.</p>
+          <section className="info-section">
+            <div className="carousel-wrapper" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+              <div className="carousel-items" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
+                <div className="carousel-item">
+                  <span className="carousel-icon">💰</span>
+                  <h4>Best Prices</h4>
+                  <p>Order direct and save more — no middlemen, just great value.</p>
+                </div>
+                <div className="carousel-item">
+                  <span className="carousel-icon">🍳</span>
+                  <h4>Freshly Prepared</h4>
+                  <p>Made to order with fresh ingredients, every single time.</p>
+                </div>
+                <div className="carousel-item">
+                  <span className="carousel-icon">🚗</span>
+                  <h4>Fast Delivery</h4>
+                  <p>Typical delivery time 30–45 minutes, right to your door.</p>
+                </div>
+              </div>
+              <div className="carousel-dots">
+                {[0, 1, 2].map(i => (
+                  <button key={i} className={`dot ${i === carouselIdx ? 'active' : ''}`} onClick={() => setCarouselIdx(i)} aria-label={`Slide ${i + 1}`}></button>
+                ))}
+              </div>
             </div>
-            <div className="carousel-item">
-              <span className="carousel-icon">🍳</span>
-              <h4>Freshly Prepared</h4>
-              <p>Made to order with fresh ingredients, every single time.</p>
-            </div>
-            <div className="carousel-item">
-              <span className="carousel-icon">🚗</span>
-              <h4>Fast Delivery</h4>
-              <p>Typical delivery time 30–45 minutes, right to your door.</p>
-            </div>
-          </div>
-          <div className="carousel-dots">
-            {[0, 1, 2].map(i => (
-              <button key={i} className={`dot ${i === carouselIdx ? 'active' : ''}`} onClick={() => setCarouselIdx(i)} aria-label={`Slide ${i + 1}`}></button>
-            ))}
-          </div>
-        </div>
-      </section>
+          </section>
+        </>
+      )}
 
       {/* Overlay when shop is closed — blurs all content beneath */}
       {!isOpen && !exploreMenu && (
@@ -472,10 +456,23 @@ function App() {
               <h4>Quick Contact</h4>
               <p style={{color:'var(--text-secondary)',marginTop:6,fontSize:14}}>Send a WhatsApp message with your query</p>
               <button className="place-btn enabled" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello, I would like to enquire about...')}`, '_blank')}>Message on WhatsApp</button>
+              <button className="primary" style={{marginTop:12}} onClick={() => navigate('menu')}>Explore our menu</button>
             </aside>
           </main>
         ) : (
-          <main className="content contact-page"><div style={{padding:20}}>About MoodFresher — Delicious food delivered fresh. <br/>Made with love.</div></main>
+          <main className="content contact-page">
+            <section style={{padding:20}}>
+              <h3>About MoodFresher</h3>
+              <p>Delicious food delivered fresh. Made with love.</p>
+              <div style={{marginTop:24}}>
+                <button className="primary" onClick={() => navigate('menu')}>Explore our menu</button>
+              </div>
+            </section>
+            <aside className="order-panel">
+              <h4>Quick Links</h4>
+              <button className="place-btn enabled" onClick={() => navigate('menu')}>Explore our menu</button>
+            </aside>
+          </main>
         )}
 
         {view === 'menu' && cartCount > 0 && (
