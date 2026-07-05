@@ -161,8 +161,7 @@ function App() {
   }).filter(x => x.qty > 0)
 
   const subtotal = orderLines.reduce((s, it) => s + it.lineTotal, 0)
-  const delivery = subtotal > 0 ? 20 : 0
-  const total = subtotal + delivery
+  const total = subtotal
 
   const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen
 
@@ -180,7 +179,7 @@ function App() {
 
     let msg = `Mood Fresher - New order from website\nName: ${name}\nMobile: ${mobile}\nAddress: ${address}\n\nItems:\n`
     orderLines.forEach(it => { msg += `${it.name} x ${it.qty} = ₹${it.lineTotal}\n` })
-    msg += `\nSubtotal: ₹${subtotal}\nDelivery: ₹${delivery}\nTotal: ₹${total}`
+    msg += `\nSubtotal: ₹${subtotal}\nTotal: ₹${total}`
     if (instructions && instructions.trim()) {
       msg += `\n\nInstructions: ${instructions.trim()}`
     }
@@ -242,7 +241,6 @@ function App() {
           </div>
         </div>
         <div className="top-actions">
-          <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>ORDER ON WHATSAPP</button>
           <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) scrollToOrderPanel() }}>🛒<span className="cart-count">{cartCount}</span></div>
         </div>
       </header>
@@ -373,7 +371,6 @@ function App() {
                     ))}
                   </ul>
                   <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
-                  <div className="summary-row"><span>Delivery</span><span>₹{delivery}</span></div>
                   <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
                 </div>
               )}
@@ -385,7 +382,7 @@ function App() {
                 <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
               </div>
 
-              <button className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace}>Place order via WhatsApp</button>
+              <button className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace}>Place order</button>
             </aside>
           </main>
         ) : view === 'contact' ? (
@@ -413,7 +410,7 @@ function App() {
                   <span className="contact-icon">✉️</span>
                   <div className="contact-text">
                     <div className="contact-label">Email</div>
-                    <div className="contact-value">moodfresher@example.com</div>
+                    <div className="contact-value">moodfresher.24@gmail.com</div>
                   </div>
                 </div>
               </div>
@@ -470,17 +467,13 @@ function App() {
                 <button className="primary" onClick={() => navigate('menu')}>Explore our menu</button>
               </div>
             </section>
-            <aside className="order-panel">
-              <h4>Quick Links</h4>
-              <button className="place-btn enabled" onClick={() => navigate('menu')}>Explore our menu</button>
-            </aside>
           </main>
         )}
 
         {view === 'menu' && cartCount > 0 && (
           <div className="bottom-bar">
             <div className="left">{cartCount} items • ₹{total}</div>
-            <button className="place" onClick={canPlace ? placeOrder : scrollToOrderPanel} disabled={false}>{canPlace ? 'Place order on WhatsApp' : 'Enter details to order'}</button>
+            <button className="place" onClick={canPlace ? placeOrder : scrollToOrderPanel} disabled={false}>{canPlace ? 'Place order' : 'Enter details to order'}</button>
           </div>
         )}
       </div>
