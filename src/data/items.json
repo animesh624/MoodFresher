@@ -1,4 +1,14 @@
 {
+  "_supportedCategories": [
+    "All",
+    "Chinese",
+    "Chaap Specials",
+    "Thali",
+    "Indian Gravy",
+    "Combos",
+    "Momos"
+  ],
+  "_categoryHelp": "Use any of the above categories for the 'category' field in items below. 'All' is reserved for filtering and should NOT be used as an item category.",
   "shopOpen": true,
   "operatingHours": {
     "enabled": true,
