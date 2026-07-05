@@ -554,9 +554,8 @@
   display: none;
 }
 
-/* Scroll hint fade effect on the right edge */
-.category-row::after {
-  content: '›';
+/* Scroll hint arrow button on the right edge */
+.cat-arrow {
   position: sticky;
   right: 0;
   top: 0;
@@ -570,9 +569,18 @@
   font-weight: 700;
   color: var(--gold);
   background: linear-gradient(to left, var(--bg-primary) 40%, transparent);
-  pointer-events: none;
+  border: none;
+  cursor: pointer;
   z-index: 1;
   opacity: 0.7;
+  transition: opacity var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.cat-arrow:hover {
+  opacity: 1;
+  color: var(--gold-light);
 }
 
 .cat {

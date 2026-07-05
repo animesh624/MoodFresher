@@ -123,6 +123,7 @@ function App() {
   const [isOpen, setIsOpen] = useState(isShopOperating())
   const [exploreMenu, setExploreMenu] = useState(false)
   const orderPanelRef = useRef(null)
+  const catRowRef = useRef(null)
 
   const navigate = (newView) => {
     setView(newView)
@@ -242,7 +243,7 @@ function App() {
         </div>
         <div className="top-actions">
           <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>ORDER ON WHATSAPP</button>
-          <div className="cart" title="Cart">🛒<span className="cart-count">{cartCount}</span></div>
+          <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) scrollToOrderPanel() }}>🛒<span className="cart-count">{cartCount}</span></div>
         </div>
       </header>
 
@@ -327,10 +328,11 @@ function App() {
 
       <div className={`content-wrapper ${!isOpen && !exploreMenu ? 'blurred' : ''}`}>
         {view === 'menu' && (
-          <div className="category-row">
+          <div className="category-row" ref={catRowRef}>
             {CATEGORIES.map(cat => (
               <button key={cat} className={cat === activeCat ? 'cat active' : 'cat'} onClick={() => setActiveCat(cat)}>{cat}</button>
             ))}
+            <button className="cat-arrow" onClick={() => { catRowRef.current?.scrollBy({ left: 200, behavior: 'smooth' }) }} aria-label="Scroll categories">›</button>
           </div>
         )}
 
