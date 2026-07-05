@@ -1,5 +1,5 @@
 {
-  "shopOpen": false,
+  "shopOpen": true,
   "operatingHours": {
     "enabled": true,
     "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],

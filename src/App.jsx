@@ -141,6 +141,7 @@ function App() {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const [isOpen, setIsOpen] = useState(isShopOperating())
+  const [exploreMenu, setExploreMenu] = useState(false)
   const orderPanelRef = useRef(null)
 
   const navigate = (newView) => {
@@ -182,7 +183,7 @@ function App() {
   const delivery = subtotal > 0 ? 20 : 0
   const total = subtotal + delivery
 
-  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER
+  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen
 
   const scrollToOrderPanel = () => {
     if (orderPanelRef.current) {
@@ -226,9 +227,14 @@ function App() {
   }, [])
 
   useEffect(() => {
-    setIsOpen(isShopOperating())
+    const current = isShopOperating()
+    setIsOpen(current)
+    // Reset exploreMenu when shop opens
+    if (current) setExploreMenu(false)
     const timer = setInterval(() => {
-      setIsOpen(isShopOperating())
+      const newVal = isShopOperating()
+      setIsOpen(newVal)
+      if (newVal) setExploreMenu(false)
     }, 60000)
     return () => clearInterval(timer)
   }, [])
@@ -311,13 +317,19 @@ function App() {
       </section>
 
       {/* Overlay when shop is closed — blurs all content beneath */}
-      {!isOpen && (
+      {!isOpen && !exploreMenu && (
         <div className="shop-closed-overlay">
           <div className="shop-closed-card">
             <span className="closed-icon">{closureInfo?.icon || '🔒'}</span>
             <h2>{closureInfo?.title || 'Currently Unavailable'}</h2>
             <p>{closureInfo?.detail || ''}</p>
+            <p style={{marginTop:-12, marginBottom:24, fontSize:14, color:'var(--text-muted)'}}>
+              You can still explore our menu below, but ordering will not be available.
+            </p>
             <div className="closed-actions">
+              <button className="primary" onClick={() => setExploreMenu(true)}>
+                Explore Menu
+              </button>
               <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
                 Message on WhatsApp
               </button>
@@ -329,10 +341,10 @@ function App() {
         </div>
       )}
 
-      <div className={`content-wrapper ${!isOpen ? 'blurred' : ''}`}>
+      <div className={`content-wrapper ${!isOpen && !exploreMenu ? 'blurred' : ''}`}>
         {view === 'menu' && (
           <div className="category-row">
-            {isOpen && CATEGORIES.map(cat => (
+            {CATEGORIES.map(cat => (
               <button key={cat} className={cat === activeCat ? 'cat active' : 'cat'} onClick={() => setActiveCat(cat)}>{cat}</button>
             ))}
           </div>
@@ -387,7 +399,7 @@ function App() {
                 <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
               </div>
 
-              <button className={`place-btn ${canPlace && isOpen ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace || !isOpen}>Place order via WhatsApp</button>
+              <button className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace}>Place order via WhatsApp</button>
             </aside>
           </main>
         ) : view === 'contact' ? (
