@@ -11,10 +11,10 @@
   "_categoryHelp": "Use any of the above categories for the 'category' field in items below. 'All' is reserved for filtering and should NOT be used as an item category.",
   "shopOpen": true,
   "operatingHours": {
-    "enabled": true,
+    "enabled": false,
     "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "openTime": "17:00",
-    "closeTime": "22:00"
+    "closeTime": "23:59"
   },
   "items": [
     {

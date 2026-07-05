@@ -114,6 +114,8 @@ function App() {
   const [address, setAddress] = useState('')
   const [mobile, setMobile] = useState('')
   const [instructions, setInstructions] = useState('')
+  const [location, setLocation] = useState(null)
+  const [locating, setLocating] = useState(false)
   const [activeCat, setActiveCat] = useState('All')
   const [navOpen, setNavOpen] = useState(false)
   const [view, setView] = useState('menu')
@@ -182,6 +184,9 @@ function App() {
     msg += `\nSubtotal: ₹${subtotal}\nTotal: ₹${total}`
     if (instructions && instructions.trim()) {
       msg += `\n\nInstructions: ${instructions.trim()}`
+    }
+    if (location) {
+      msg += `\n\n📍 Live Location: ${location}`
     }
 
     const encoded = encodeURIComponent(msg)
@@ -380,6 +385,32 @@ function App() {
                 <input placeholder="Mobile number" value={mobile} onChange={e => setMobile(e.target.value)} style={{marginTop:8}} disabled={!isOpen} />
                 <textarea placeholder="Delivery address" value={address} onChange={e => setAddress(e.target.value)} rows={3} disabled={!isOpen} />
                 <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
+                <button
+                  className={`loc-btn ${location ? 'shared' : ''}`}
+                  onClick={() => {
+                    if (!navigator.geolocation) {
+                      alert('Geolocation is not supported by your browser.')
+                      return
+                    }
+                    setLocating(true)
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const lat = pos.coords.latitude
+                        const lng = pos.coords.longitude
+                        setLocation(`https://maps.google.com/?q=${lat},${lng}`)
+                        setLocating(false)
+                      },
+                      (err) => {
+                        alert('Could not get your location. Please enable location access and try again.')
+                        setLocating(false)
+                      },
+                      { enableHighAccuracy: true, timeout: 10000 }
+                    )
+                  }}
+                  disabled={!isOpen || locating}
+                >
+                  {locating ? '📍 Getting location...' : location ? '📍 Location shared ✓' : '📍 Share live location'}
+                </button>
               </div>
 
               <button className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace}>Place order</button>

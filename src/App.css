@@ -919,6 +919,41 @@
   min-height: 60px;
 }
 
+/* Location Button */
+.loc-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: rgba(37, 211, 102, 0.06);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.loc-btn:hover:not(:disabled) {
+  background: rgba(37, 211, 102, 0.12);
+  border-color: var(--green);
+}
+
+.loc-btn.shared {
+  background: rgba(37, 211, 102, 0.12);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.loc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Place Button */
 .place-btn {
   width: 100%;
