@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import './App.css'
 
+import brandLogo from './resources/Logo.jpeg'
 import soyaChaapBiryani from './resources/SoyaChaap biryani.jpeg'
 import premiumThali from './resources/Premium Thali.jpeg'
 import mlaaiChaap from './resources/Mlaai Chaap.jpeg'
@@ -16,24 +17,114 @@ import chaapButterMasalaRumali from './resources/Chaap Butter Msala RUmali Roti.
 import bahubaliThali from './resources/Bahubali Thali.jpeg'
 import afgaaniChaap from './resources/Afgaani chaap.jpeg'
 import achaariChaap from './resources/Achaari Chaap.jpeg'
+import itemsData from './data/items.json'
 
-const WHATSAPP_NUMBER = '918736066574' // your WhatsApp number (no +)
+const WHATSAPP_NUMBER = '918736066574'
 
-const MENU = [
-  { id: 1, name: 'Soya Chaap Biryani', price: 160, desc: 'Soya chaap biryani - flavorful & aromatic', img: soyaChaapBiryani, category: 'Chaap Specials' },
-  { id: 2, name: 'Paneer Butter Masala', price: 140, desc: 'Soft paneer cubes in rich creamy tomato gravy', img: menu1, category: 'Indian Gravy' },
-  { id: 3, name: 'Veg Chowmein', price: 120, desc: 'Hakka style stir fried noodles with veggies', img: manchurianNoodles, category: 'Chinese' },
-  { id: 4, name: 'Manchurian Fried Rice', price: 140, desc: 'Fried rice tossed with manchurian veg', img: manchurianFriedRice, category: 'Chinese' },
-  { id: 5, name: 'Chilli Paneer Noodle', price: 150, desc: 'Spicy chilli paneer with noodles', img: chilliPaneerNoodle, category: 'Chinese' },
-  { id: 6, name: 'Chilli Paneer Fried Rice', price: 150, desc: 'Chilli paneer served with fried rice', img: chilliPaneerFriedRice, category: 'Chinese' },
-  { id: 7, name: 'Achaari Chaap', price: 180, desc: 'Achaari marinated chaap, grilled to perfection', img: achaariChaap, category: 'Chaap Specials' },
-  { id: 8, name: 'Afgaani Chaap', price: 200, desc: 'Afgaani style chaap with rich flavours', img: afgaaniChaap, category: 'Chaap Specials' },
-  { id: 9, name: 'Chaap Butter Masala + Rumali Roti', price: 220, desc: 'Chaap butter masala served with rumali roti', img: chaapButterMasalaRumali, category: 'Chaap Specials' },
-  { id: 10, name: 'Bahubali Thali', price: 320, desc: 'Hearty thali with multiple dishes', img: bahubaliThali, category: 'Thali' },
-  { id: 11, name: 'Delux Thali', price: 260, desc: 'Deluxe thali for a complete meal', img: deluxThali, category: 'Thali' },
-  { id: 12, name: 'Premium Thali', price: 300, desc: 'Premium thali with special dishes', img: premiumThali, category: 'Thali' },
-  { id: 13, name: 'Mlaai Chaap', price: 200, desc: 'Creamy malai chaap', img: mlaaiChaap, category: 'Chaap Specials' },
-]
+// Map photo names to imported images
+const photoMap = {
+  'SoyaChaap biryani.jpeg': soyaChaapBiryani,
+  'menu1.jpeg': menu1,
+  'Manchurian Noodles.jpeg': manchurianNoodles,
+  'Manchurian Fried Rice.jpeg': manchurianFriedRice,
+  'Chilli Paneer Noodle.jpeg': chilliPaneerNoodle,
+  'CHilli Paneer Fried Rice.jpeg': chilliPaneerFriedRice,
+  'Achaari Chaap.jpeg': achaariChaap,
+  'Afgaani chaap.jpeg': afgaaniChaap,
+  'Chaap Butter Msala RUmali Roti.jpeg': chaapButterMasalaRumali,
+  'Bahubali Thali.jpeg': bahubaliThali,
+  'Delux Thaali.jpeg': deluxThali,
+  'Premium Thali.jpeg': premiumThali,
+  'Mlaai Chaap.jpeg': mlaaiChaap,
+}
+
+// Build MENU from items.json with images
+const MENU = itemsData.items.map(item => ({
+  id: item.id,
+  name: item.itemName,
+  price: item.price,
+  desc: item.description,
+  img: photoMap[item.photoName],
+  category: item.category,
+}))
+
+const CONFIG = itemsData
+const SHOP_OPEN = CONFIG.shopOpen
+const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+// Helper function to check if shop is open based on operating hours
+const isShopOperating = () => {
+  if (!SHOP_OPEN) return false
+
+  const config = CONFIG.operatingHours
+  if (!config.enabled) return true
+
+  const now = new Date()
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' })
+  const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
+
+  const isOperatingDay = config.days.includes(dayName)
+  const isOperatingTime = currentTime >= config.openTime && currentTime < config.closeTime
+
+  return isOperatingDay && isOperatingTime
+}
+
+// Format time from 24h to 12h format
+const formatTime = (time24) => {
+  const [h, m] = time24.split(':')
+  const hour = parseInt(h)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const hour12 = hour % 12 || 12
+  return `${hour12}:${m} ${ampm}`
+}
+
+// Get list of closed days dynamically
+const getClosedDaysList = (openDays) => {
+  const closedDays = ALL_DAYS.filter(d => !openDays.includes(d))
+  const dayLabels = {
+    Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
+    Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun'
+  }
+  return closedDays.map(d => dayLabels[d] || d)
+}
+
+// Get closure reason message — fully dynamic
+const getClosureMessage = (shopOpen, config) => {
+  const openTimeFormatted = formatTime(config.openTime)
+  const closeTimeFormatted = formatTime(config.closeTime)
+
+  // If manually closed via shopOpen flag
+  if (!shopOpen) {
+    return {
+      icon: '🔒',
+      title: 'Currently Offline',
+      detail: "We're temporarily unavailable. Thank you for your patience. Please reach out to us via WhatsApp to enquire or pre-order."
+    }
+  }
+
+  if (!config.enabled) return null
+
+  const now = new Date()
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' })
+  const isOperatingDay = config.days.includes(dayName)
+
+  if (!isOperatingDay) {
+    const closedList = getClosedDaysList(config.days)
+    return {
+      icon: '😴',
+      title: `Closed on ${closedList.join(', ')}`,
+      detail: closedList.includes(dayName.slice(0, 3))
+        ? `We're closed today (${dayName}). Our operating hours are ${openTimeFormatted} - ${closeTimeFormatted}. See you on our next working day!`
+        : `We're open ${openTimeFormatted} - ${closeTimeFormatted}. We're closed on ${closedList.join(', ')}.`
+    }
+  } else {
+    return {
+      icon: '⏰',
+      title: "Not Open Yet",
+      detail: `Our kitchen opens at ${openTimeFormatted} and closes at ${closeTimeFormatted}. Please visit us during operating hours.`
+    }
+  }
+}
 
 const CATEGORIES = ['All', 'Chinese', 'Chaap Specials', 'Thali', 'Indian Gravy', 'Combos', 'Momos']
 
@@ -45,10 +136,13 @@ function App() {
   const [instructions, setInstructions] = useState('')
   const [activeCat, setActiveCat] = useState('All')
   const [navOpen, setNavOpen] = useState(false)
-  const [view, setView] = useState('menu') // 'menu' | 'contact' | 'about'
+  const [view, setView] = useState('menu')
   const [carouselIdx, setCarouselIdx] = useState(0)
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
+  const [isOpen, setIsOpen] = useState(isShopOperating())
+  const orderPanelRef = useRef(null)
 
-  // Navigation helpers: sync view with URL so Contact opens as a new page (pushState)
   const navigate = (newView) => {
     setView(newView)
     const path = newView === 'menu' ? '/' : `/${newView}`
@@ -56,7 +150,6 @@ function App() {
   }
 
   useEffect(() => {
-    // Initialize view from current URL
     const p = window.location.pathname.replace(/\/$/, '')
     if (p === '' || p === '/') setView('menu')
     else if (p.includes('contact')) setView('contact')
@@ -91,6 +184,12 @@ function App() {
 
   const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER
 
+  const scrollToOrderPanel = () => {
+    if (orderPanelRef.current) {
+      orderPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   const placeOrder = () => {
     if (!canPlace) {
       alert('Please enter name, address and select at least one item before placing the order.')
@@ -111,25 +210,49 @@ function App() {
 
   const cartCount = orderLines.reduce((s, it) => s + it.qty, 0)
 
+  const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX)
+  const handleTouchEnd = (e) => {
+    setTouchEnd(e.changedTouches[0].clientX)
+    if (touchStart - e.changedTouches[0].clientX > 50) {
+      setCarouselIdx(prev => (prev + 1) % 3)
+    }
+    if (e.changedTouches[0].clientX - touchStart > 50) {
+      setCarouselIdx(prev => (prev - 1 + 3) % 3)
+    }
+  }
+
   useEffect(() => {
     document.title = 'MoodFresher — Cafe & Restaurant'
   }, [])
 
-  // Auto-scroll carousel every 8 seconds (slowed down)
+  useEffect(() => {
+    setIsOpen(isShopOperating())
+    const timer = setInterval(() => {
+      setIsOpen(isShopOperating())
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCarouselIdx(prev => (prev + 1) % 3)
-    }, 8000)
+    }, 3000)
     return () => clearInterval(timer)
   }, [])
+
+  // Dynamic closure info
+  const closureInfo = !isOpen ? getClosureMessage(SHOP_OPEN, CONFIG.operatingHours) : null
 
   return (
     <div className="app-root">
       <header className="topbar">
         <button className="hamburger" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
         <div className="brand">
-          <div className="logo">Mood<br/>Fresher</div>
-          <div className="tag">Cafe & Restaurant</div>
+          <img className="brand-logo" src={brandLogo} alt="MoodFresher" />
+          <div className="brand-text">
+            <div className="logo">MoodFresher</div>
+            <div className="tag">Cafe & Restaurant</div>
+          </div>
         </div>
         <div className="top-actions">
           <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>ORDER ON WHATSAPP</button>
@@ -141,10 +264,12 @@ function App() {
       <div className={"nav-drawer" + (navOpen ? ' open' : '')} onClick={() => setNavOpen(false)}>
         <nav className="nav-inner" onClick={e => e.stopPropagation()}>
           <button className="nav-close" onClick={() => setNavOpen(false)}>✕</button>
+          <div className="drawer-brand">MoodFresher</div>
+          <div className="drawer-sub">Cafe & Restaurant</div>
           <ul>
-            <li><button onClick={() => { navigate('menu'); setNavOpen(false); }}>Menu</button></li>
-            <li><button onClick={() => { navigate('contact'); setNavOpen(false); }}>Contact</button></li>
-            <li><button onClick={() => { navigate('about'); setNavOpen(false); }}>About</button></li>
+            <li><button onClick={() => { navigate('menu'); setNavOpen(false); }}>🍽️ Menu</button></li>
+            <li><button onClick={() => { navigate('contact'); setNavOpen(false); }}>📞 Contact</button></li>
+            <li><button onClick={() => { navigate('about'); setNavOpen(false); }}>ℹ️ About</button></li>
           </ul>
         </nav>
       </div>
@@ -159,134 +284,195 @@ function App() {
       </section>
 
       <section className="info-section">
-        <div className="carousel-wrapper">
+        <div className="carousel-wrapper" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
           <div className="carousel-items" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
-            <div className="info-card carousel-item">
-              <h4>💰 Best Prices</h4>
-              <p>Order direct and save more — no middlemen.</p>
+            <div className="carousel-item">
+              <span className="carousel-icon">💰</span>
+              <h4>Best Prices</h4>
+              <p>Order direct and save more — no middlemen, just great value.</p>
             </div>
-            <div className="info-card carousel-item">
-              <h4>🍳 Freshly Prepared</h4>
-              <p>Made to order with fresh ingredients.</p>
+            <div className="carousel-item">
+              <span className="carousel-icon">🍳</span>
+              <h4>Freshly Prepared</h4>
+              <p>Made to order with fresh ingredients, every single time.</p>
             </div>
-            <div className="info-card carousel-item">
-              <h4>🚗 Fast Delivery</h4>
-              <p>Typical delivery time 30–45 minutes.</p>
+            <div className="carousel-item">
+              <span className="carousel-icon">🚗</span>
+              <h4>Fast Delivery</h4>
+              <p>Typical delivery time 30–45 minutes, right to your door.</p>
             </div>
           </div>
           <div className="carousel-dots">
             {[0, 1, 2].map(i => (
-              <button key={i} className={`dot ${i === carouselIdx ? 'active' : ''}`} onClick={() => setCarouselIdx(i)}></button>
+              <button key={i} className={`dot ${i === carouselIdx ? 'active' : ''}`} onClick={() => setCarouselIdx(i)} aria-label={`Slide ${i + 1}`}></button>
             ))}
           </div>
         </div>
       </section>
 
-      {view === 'menu' && (
-        <div className="category-row">
-          {CATEGORIES.map(cat => (
-            <button key={cat} className={cat === activeCat ? 'cat active' : 'cat'} onClick={() => setActiveCat(cat)}>{cat}</button>
-          ))}
+      {/* Overlay when shop is closed — blurs all content beneath */}
+      {!isOpen && (
+        <div className="shop-closed-overlay">
+          <div className="shop-closed-card">
+            <span className="closed-icon">{closureInfo?.icon || '🔒'}</span>
+            <h2>{closureInfo?.title || 'Currently Unavailable'}</h2>
+            <p>{closureInfo?.detail || ''}</p>
+            <div className="closed-actions">
+              <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
+                Message on WhatsApp
+              </button>
+              <button className="secondary" onClick={() => { navigate('contact'); }}>
+                Contact Us
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {view === 'menu' ? (
-        <main className="content">
-          <section className="menu-section">
-            <h3>Explore our menu</h3>
-            <div className="menu-grid">
-              {visibleMenu.map(item => (
-                <article className="menu-card" key={item.id}>
-                  <div className="food-img" aria-hidden style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-                  <div className="menu-info">
-                    <div>
-                      <div className="menu-title">{item.name}</div>
-                      <div className="menu-desc">{item.desc}</div>
-                    </div>
-                    <div className="menu-footer">
-                      <div className="price">₹{item.price}</div>
-                      <div className="qty-controls">
-                        <button className="small" onClick={() => dec(item.id)}>-</button>
-                        <input value={quantities[item.id] || 0} onChange={e => setQty(item.id, e.target.value)} />
-                        <button className="small" onClick={() => inc(item.id)}>+</button>
+      <div className={`content-wrapper ${!isOpen ? 'blurred' : ''}`}>
+        {view === 'menu' && (
+          <div className="category-row">
+            {isOpen && CATEGORIES.map(cat => (
+              <button key={cat} className={cat === activeCat ? 'cat active' : 'cat'} onClick={() => setActiveCat(cat)}>{cat}</button>
+            ))}
+          </div>
+        )}
+
+        {view === 'menu' ? (
+          <main className="content">
+            <section className="menu-section">
+              <h3>Explore our menu</h3>
+              <div className="menu-grid">
+                {visibleMenu.map(item => (
+                  <article className="menu-card" key={item.id}>
+                    <div className="food-img" aria-hidden style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                    <div className="menu-info">
+                      <div>
+                        <div className="menu-title">{item.name}</div>
+                        <div className="menu-desc">{item.desc}</div>
+                      </div>
+                      <div className="menu-footer">
+                        <div className="price">₹{item.price}</div>
+                        <div className="qty-controls">
+                          <button className="small" disabled={!isOpen} onClick={() => dec(item.id)}>-</button>
+                          <input value={quantities[item.id] || 0} onChange={e => setQty(item.id, e.target.value)} disabled={!isOpen} />
+                          <button className="small" disabled={!isOpen} onClick={() => inc(item.id)}>+</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <aside className="order-panel">
-            <h4>Order summary</h4>
-            {orderLines.length === 0 ? <div className="empty">No items selected</div> : (
-              <div>
-                <ul className="order-lines">
-                  {orderLines.map(it => (
-                    <li key={it.id}><span>{it.name} x {it.qty}</span><strong>₹{it.lineTotal}</strong></li>
-                  ))}
-                </ul>
-                <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
-                <div className="summary-row"><span>Delivery</span><span>₹{delivery}</span></div>
-                <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
+                  </article>
+                ))}
               </div>
-            )}
+            </section>
 
-            <div className="cust-inputs">
-              <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
-              <input placeholder="Mobile number" value={mobile} onChange={e => setMobile(e.target.value)} style={{marginTop:8}} />
-              <textarea placeholder="Delivery address" value={address} onChange={e => setAddress(e.target.value)} rows={3} />
-              <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} />
-            </div>
+            <aside className="order-panel" ref={orderPanelRef}>
+              <h4>Order summary</h4>
+              {orderLines.length === 0 ? <div className="empty">No items selected</div> : (
+                <div>
+                  <ul className="order-lines">
+                    {orderLines.map(it => (
+                      <li key={it.id}><span>{it.name} x {it.qty}</span><strong>₹{it.lineTotal}</strong></li>
+                    ))}
+                  </ul>
+                  <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
+                  <div className="summary-row"><span>Delivery</span><span>₹{delivery}</span></div>
+                  <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
+                </div>
+              )}
 
-            <button className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace}>Place order via WhatsApp</button>
-          </aside>
-        </main>
-      ) : view === 'contact' ? (
-        <main className="content contact-page">
-          <section style={{flex:1, padding:20}}>
-            <h3>Contact Us</h3>
-            <p style={{color:'var(--muted)'}}>Have a question or want to place a large/bulk order? Reach out using the details below or message us on WhatsApp.</p>
+              <div className="cust-inputs">
+                <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={!isOpen} />
+                <input placeholder="Mobile number" value={mobile} onChange={e => setMobile(e.target.value)} style={{marginTop:8}} disabled={!isOpen} />
+                <textarea placeholder="Delivery address" value={address} onChange={e => setAddress(e.target.value)} rows={3} disabled={!isOpen} />
+                <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
+              </div>
 
-            <div style={{display:'grid',gridTemplateColumns:'1fr',gap:12,marginTop:12}}>
-              <div style={{background:'rgba(255,255,255,0.02)',padding:12,borderRadius:8}}>Phone: <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">+91 {WHATSAPP_NUMBER.slice(2)}</a></div>
-              <div style={{background:'rgba(255,255,255,0.02)',padding:12,borderRadius:8}}>Address: 27/17 Elgin Road, Civil Lines, Prayagraj, Uttar Pradesh</div>
-              <div style={{background:'rgba(255,255,255,0.02)',padding:12,borderRadius:8}}>Email: moodfresher@example.com</div>
-            </div>
+              <button className={`place-btn ${canPlace && isOpen ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace || !isOpen}>Place order via WhatsApp</button>
+            </aside>
+          </main>
+        ) : view === 'contact' ? (
+          <main className="content contact-page">
+            <section>
+              <h3>Contact Us</h3>
+              <p>Have a question or want to place a large/bulk order? Reach out using the details below or message us on WhatsApp.</p>
 
-            <h4 style={{marginTop:18}}>Opening Hours</h4>
-            <table style={{width:'100%',marginTop:8}}>
-              <tbody>
-                <tr><td style={{color:'var(--muted)'}}>Mon–Fri</td><td>10:00 — 22:00</td></tr>
-                <tr><td style={{color:'var(--muted)'}}>Sat–Sun</td><td>10:00 — 23:00</td></tr>
-              </tbody>
-            </table>
+              <div className="contact-grid">
+                <div className="contact-card">
+                  <span className="contact-icon">📞</span>
+                  <div className="contact-text">
+                    <div className="contact-label">Phone</div>
+                    <a className="contact-value" href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">+91 {WHATSAPP_NUMBER.slice(2)}</a>
+                  </div>
+                </div>
+                <div className="contact-card">
+                  <span className="contact-icon">📍</span>
+                  <div className="contact-text">
+                    <div className="contact-label">Address</div>
+                    <div className="contact-value">27/17 Elgin Road, Civil Lines, Prayagraj</div>
+                  </div>
+                </div>
+                <div className="contact-card">
+                  <span className="contact-icon">✉️</span>
+                  <div className="contact-text">
+                    <div className="contact-label">Email</div>
+                    <div className="contact-value">moodfresher@example.com</div>
+                  </div>
+                </div>
+              </div>
 
-            <div style={{marginTop:18}}>
-              <h4>Bulk & Catering</h4>
-              <p style={{color:'var(--muted)'}}>We accept orders for parties & marriages. Bulk orders starting from 50+ plates — message us for a quote.</p>
-            </div>
+              <h4>Opening Hours</h4>
+              <table className="opening-table">
+                <tbody>
+                  <tr>
+                    <td>
+                      {(() => {
+                        const days = CONFIG.operatingHours.days
+                        if (days.length === 7) return 'All 7 days'
+                        const short = days.map(d => d.slice(0, 3))
+                        if (short.length <= 3) return short.join(', ')
+                        return `${short[0]}–${short[short.length-1]}`
+                      })()}
+                    </td>
+                    <td>{formatTime(CONFIG.operatingHours.openTime)} — {formatTime(CONFIG.operatingHours.closeTime)}</td>
+                  </tr>
+                  {(() => {
+                    const closedDays = ALL_DAYS.filter(d => !CONFIG.operatingHours.days.includes(d))
+                    if (closedDays.length > 0) {
+                      return closedDays.map(d => (
+                        <tr key={d} style={{ opacity: 0.6 }}>
+                          <td>{d}</td>
+                          <td>Closed</td>
+                        </tr>
+                      ))
+                    }
+                    return null
+                  })()}
+                </tbody>
+              </table>
 
-          </section>
+              <div>
+                <h4>Bulk & Catering</h4>
+                <p>We accept orders for parties & marriages. Bulk orders starting from 50+ plates — message us for a quote.</p>
+              </div>
+            </section>
 
-          <aside className="order-panel">
-            <h4>Quick Contact</h4>
-            <p style={{color:'var(--muted)',marginTop:6}}>Send a WhatsApp message with your query</p>
-            <button className="place-btn enabled" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello, I would like to enquire about...')}`, '_blank')}>Message on WhatsApp</button>
-          </aside>
-        </main>
-      ) : (
-        <main className="content contact-page"><div style={{padding:20}}>About MoodFresher — Delicious food delivered fresh. <br/>Made with love.</div></main>
-      )
-      }
+            <aside className="order-panel">
+              <h4>Quick Contact</h4>
+              <p style={{color:'var(--text-secondary)',marginTop:6,fontSize:14}}>Send a WhatsApp message with your query</p>
+              <button className="place-btn enabled" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello, I would like to enquire about...')}`, '_blank')}>Message on WhatsApp</button>
+            </aside>
+          </main>
+        ) : (
+          <main className="content contact-page"><div style={{padding:20}}>About MoodFresher — Delicious food delivered fresh. <br/>Made with love.</div></main>
+        )}
 
-      {view === 'menu' && cartCount > 0 && (
-        <div className="bottom-bar">
-          <div className="left">{cartCount} items • ₹{total}</div>
-          <button className="place" onClick={placeOrder} disabled={!canPlace}>{canPlace ? 'Place order on WhatsApp' : 'Enter details to order'}</button>
-        </div>
-      )}
-
+        {view === 'menu' && cartCount > 0 && (
+          <div className="bottom-bar">
+            <div className="left">{cartCount} items • ₹{total}</div>
+            <button className="place" onClick={canPlace ? placeOrder : scrollToOrderPanel} disabled={false}>{canPlace ? 'Place order on WhatsApp' : 'Enter details to order'}</button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

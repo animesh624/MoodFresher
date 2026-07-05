@@ -1,0 +1,115 @@
+{
+  "shopOpen": false,
+  "operatingHours": {
+    "enabled": true,
+    "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "openTime": "17:00",
+    "closeTime": "23:00"
+  },
+  "items": [
+    {
+      "id": 1,
+      "itemName": "Soya Chaap Biryani",
+      "price": 160,
+      "category": "Chaap Specials",
+      "photoName": "SoyaChaap biryani.jpeg",
+      "description": "Soya chaap biryani - flavorful & aromatic"
+    },
+    {
+      "id": 2,
+      "itemName": "Paneer Butter Masala",
+      "price": 140,
+      "category": "Indian Gravy",
+      "photoName": "menu1.jpeg",
+      "description": "Soft paneer cubes in rich creamy tomato gravy"
+    },
+    {
+      "id": 3,
+      "itemName": "Veg Chowmein",
+      "price": 120,
+      "category": "Chinese",
+      "photoName": "Manchurian Noodles.jpeg",
+      "description": "Hakka style stir fried noodles with veggies"
+    },
+    {
+      "id": 4,
+      "itemName": "Manchurian Fried Rice",
+      "price": 140,
+      "category": "Chinese",
+      "photoName": "Manchurian Fried Rice.jpeg",
+      "description": "Fried rice tossed with manchurian veg"
+    },
+    {
+      "id": 5,
+      "itemName": "Chilli Paneer Noodle",
+      "price": 150,
+      "category": "Chinese",
+      "photoName": "Chilli Paneer Noodle.jpeg",
+      "description": "Spicy chilli paneer with noodles"
+    },
+    {
+      "id": 6,
+      "itemName": "Chilli Paneer Fried Rice",
+      "price": 150,
+      "category": "Chinese",
+      "photoName": "CHilli Paneer Fried Rice.jpeg",
+      "description": "Chilli paneer served with fried rice"
+    },
+    {
+      "id": 7,
+      "itemName": "Achaari Chaap",
+      "price": 180,
+      "category": "Chaap Specials",
+      "photoName": "Achaari Chaap.jpeg",
+      "description": "Achaari marinated chaap, grilled to perfection"
+    },
+    {
+      "id": 8,
+      "itemName": "Afgaani Chaap",
+      "price": 200,
+      "category": "Chaap Specials",
+      "photoName": "Afgaani chaap.jpeg",
+      "description": "Afgaani style chaap with rich flavours"
+    },
+    {
+      "id": 9,
+      "itemName": "Chaap Butter Masala + Rumali Roti",
+      "price": 220,
+      "category": "Chaap Specials",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
+      "description": "Chaap butter masala served with rumali roti"
+    },
+    {
+      "id": 10,
+      "itemName": "Bahubali Thali",
+      "price": 320,
+      "category": "Thali",
+      "photoName": "Bahubali Thali.jpeg",
+      "description": "Hearty thali with multiple dishes"
+    },
+    {
+      "id": 11,
+      "itemName": "Delux Thali",
+      "price": 260,
+      "category": "Thali",
+      "photoName": "Delux Thaali.jpeg",
+      "description": "Deluxe thali for a complete meal"
+    },
+    {
+      "id": 12,
+      "itemName": "Premium Thali",
+      "price": 300,
+      "category": "Thali",
+      "photoName": "Premium Thali.jpeg",
+      "description": "Premium thali with special dishes"
+    },
+    {
+      "id": 13,
+      "itemName": "Mlaai Chaap",
+      "price": 200,
+      "category": "Chaap Specials",
+      "photoName": "Mlaai Chaap.jpeg",
+      "description": "Creamy malai chaap"
+    }
+  ]
+}
