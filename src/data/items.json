@@ -120,6 +120,14 @@
       "category": "Chaap Specials",
       "photoName": "Mlaai Chaap.jpeg",
       "description": "Creamy malai chaap"
-    }
+    },
+     {
+      "id": 14,
+      "itemName": "Maggie Momos",
+      "price": 100,
+      "category": "Momos",
+      "photoName": "maggiemomos.jpeg",
+      "description": "Good Malai momos"
+     }
   ]
 }
