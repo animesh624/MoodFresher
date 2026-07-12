@@ -46,6 +46,33 @@
   100% { transform: scale(1); }
 }
 
+@keyframes celebPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes celebShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes sparkleFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.2); }
+}
+
+@keyframes progressPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes discountBadgePop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
 /* ============================================
    SHOP CLOSED BANNER
    ============================================ */
@@ -85,14 +112,100 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 24px;
-  gap: 12px;
+  padding: 10px 24px;
+  gap: 16px;
   background: rgba(10, 10, 15, 0.92);
   backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* Brand locked to the far left */
+.topbar .brand {
+  justify-self: start;
+}
+
+/* Centered top navigation */
+.top-nav {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.top-nav button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.top-nav button::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  transform: scaleX(0);
+  transition: transform var(--transition-fast);
+}
+
+.top-nav button:hover {
+  color: var(--text-primary);
+  background: rgba(212, 162, 76, 0.08);
+}
+
+.top-nav button.active {
+  color: var(--gold-light);
+}
+
+.top-nav button.active::after {
+  transform: scaleX(1);
+}
+
+/* Right-aligned actions (cart + hamburger) */
+.top-actions {
+  justify-self: end;
+}
+
+/* Desktop: hamburger drawer is redundant, hide it */
+.hamburger {
+  display: none;
+}
+
+/* Mobile: collapse centered nav into the hamburger drawer */
+@media (max-width: 720px) {
+  .topbar {
+    grid-template-columns: auto 1fr;
+  }
+
+  .top-nav {
+    display: none;
+  }
+
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .top-actions {
+    justify-self: end;
+  }
 }
 
 .topbar .brand {
@@ -451,6 +564,93 @@
 }
 
 /* ============================================
+   FREE DELIVERY HIGHLIGHT BANNER
+   ============================================ */
+.free-delivery-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 20px 12px;
+  padding: 14px 20px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.14), rgba(37, 211, 102, 0.05));
+  box-shadow: 0 6px 24px rgba(37, 211, 102, 0.12), inset 0 0 0 1px rgba(37, 211, 102, 0.08);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  animation: fadeInUp 0.5s ease;
+}
+
+.free-delivery-banner::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -10%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(37, 211, 102, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.free-delivery-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.22), inset 0 0 0 1px rgba(37, 211, 102, 0.12);
+}
+
+.fd-icon {
+  font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(37, 211, 102, 0.4));
+  animation: sparkleFloat 2.5s ease-in-out infinite;
+}
+
+.fd-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.fd-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  color: var(--green);
+  text-transform: uppercase;
+}
+
+.fd-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.fd-sub strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.fd-badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-green);
+  white-space: nowrap;
+  transition: transform var(--transition-fast);
+}
+
+.free-delivery-banner:hover .fd-badge {
+  transform: translateX(3px);
+}
+
+/* ============================================
    INFO / CAROUSEL SECTION
    ============================================ */
 .info-section {
@@ -736,6 +936,75 @@
   letter-spacing: -0.3px;
 }
 
+/* ----- Half/Full Variant Rows ----- */
+.half-full-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.variant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  gap: 8px;
+}
+
+.variant-row + .variant-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.variant-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.variant-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.variant-label.half-label {
+  background: rgba(212, 162, 76, 0.12);
+  color: var(--gold-light);
+  border: 1px solid rgba(212, 162, 76, 0.2);
+}
+
+.variant-label.full-label {
+  background: rgba(37, 211, 102, 0.1);
+  color: var(--green);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+}
+
+.variant-price {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.variant-row .qty-controls {
+  flex-shrink: 0;
+}
+
+/* ----- Line qty text in order summary ----- */
+.line-qty {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 /* ----- Qty Controls ----- */
 .qty-controls {
   display: flex;
@@ -799,6 +1068,7 @@
   height: fit-content;
   position: sticky;
   top: 80px;
+  overflow: visible;
 }
 
 .order-panel h4 {
@@ -819,7 +1089,322 @@
   padding: 24px 0;
 }
 
-/* Order Lines */
+/* ============================================
+   DISCOUNT LADDER
+   ============================================ */
+.discount-ladder {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.4s ease;
+}
+
+.ladder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.ladder-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.ladder-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  animation: fadeIn 0.3s ease;
+}
+
+.ladder-badge.unlocked {
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.15), rgba(37, 211, 102, 0.05));
+  color: var(--green);
+  border: 1px solid rgba(37, 211, 102, 0.3);
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.1);
+}
+
+.ladder-badge.locked {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Progress Track */
+.ladder-track {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  margin: 32px 0 60px;
+  overflow: visible;
+}
+
+.ladder-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--green));
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(212, 162, 76, 0.3);
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+/* Markers on the track */
+.ladder-marker {
+  position: absolute;
+  top: -14px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.marker-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  border: 2px solid var(--border-subtle);
+  background: var(--bg-card);
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.ladder-marker.unlocked .marker-dot {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.3);
+}
+
+.ladder-marker.locked .marker-dot {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-subtle);
+}
+
+.marker-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-top: 20px;
+  letter-spacing: 0.2px;
+}
+
+.ladder-marker.unlocked .marker-label {
+  color: var(--green);
+}
+
+.marker-amount {
+  font-size: 8px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.ladder-marker.unlocked .marker-amount {
+  color: var(--green);
+  opacity: 1;
+}
+
+/* Ladder Footer Messages */
+.ladder-footer {
+  margin-top: 16px;
+}
+
+.ladder-msg {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+  animation: fadeInUp 0.3s ease;
+}
+
+.ladder-msg.min-order-msg {
+  color: var(--red);
+  background: rgba(255, 77, 79, 0.08);
+  border: 1px solid rgba(255, 77, 79, 0.15);
+}
+
+.ladder-msg.unlock-msg {
+  color: var(--gold-light);
+  background: rgba(212, 162, 76, 0.08);
+  border: 1px solid rgba(212, 162, 76, 0.15);
+}
+
+.ladder-msg.next-msg {
+  color: var(--gold-light);
+  background: rgba(212, 162, 76, 0.08);
+  border: 1px solid rgba(212, 162, 76, 0.15);
+}
+
+.ladder-msg.max-msg {
+  color: var(--green);
+  background: rgba(37, 211, 102, 0.08);
+  border: 1px solid rgba(37, 211, 102, 0.15);
+}
+
+/* ============================================
+   CELEBRATION OVERLAY
+   ============================================ */
+.celebration-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-lg);
+  animation: fadeIn 0.3s ease;
+  pointer-events: none;
+}
+
+.celebration-content {
+  text-align: center;
+  padding: 32px 20px;
+  animation: celebPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.celebration-sparkles {
+  font-size: 32px;
+  margin-bottom: 12px;
+  animation: sparkleFloat 1.5s ease-in-out infinite;
+  letter-spacing: 8px;
+}
+
+.celebration-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light), #fff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.celebration-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.celebration-bar {
+  width: 160px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.celebration-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--green));
+  background-size: 200% 100%;
+  animation: celebShimmer 1.5s linear infinite;
+}
+
+/* Celebration upsell section */
+.celebration-upsell {
+  margin-top: 16px;
+  padding: 0 8px;
+}
+
+.upsell-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  margin-bottom: 12px;
+}
+
+.upsell-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.upsell-text strong {
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+.upsell-text.max {
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* ============================================
+   DISCOUNT ROW IN SUMMARY
+   ============================================ */
+.summary-row.discount-row {
+  color: var(--green);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 0;
+  background: rgba(37, 211, 102, 0.04);
+  border-radius: 4px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.discount-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  background: rgba(37, 211, 102, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(37, 211, 102, 0.25);
+  animation: discountBadgePop 0.4s ease;
+  vertical-align: middle;
+}
+
+.discount-amount {
+  font-weight: 800;
+  color: var(--green);
+}
+
+/* Bottom bar discount indicator */
+.bottom-discount {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* ============================================
+   ORDER LINES
+   ============================================ */
 .order-lines {
   list-style: none;
   padding: 0;
@@ -862,6 +1447,43 @@
   padding: 8px 0;
   color: var(--text-secondary);
   font-size: 14px;
+}
+
+.summary-row.delivery {
+  font-size: 13px;
+  padding: 6px 0;
+  color: var(--text-secondary);
+}
+
+.summary-row.delivery .delivery-distance {
+  display: inline-block;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.summary-row.delivery .free-delivery {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Delivery note below summary */
+.delivery-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 8px 0 4px;
+  line-height: 1.4;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 4px;
+}
+
+.delivery-note.free {
+  color: var(--green);
 }
 
 .summary-row.total {

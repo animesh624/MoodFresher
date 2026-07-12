@@ -6,10 +6,24 @@ import itemsData from './data/items.json'
 
 const WHATSAPP_NUMBER = '918736066574'
 
-// Auto-load all menu images from resources folder using Vite's import.meta.glob
+// Restaurant location
+const RESTAURANT_LAT = 25.454273556578134
+const RESTAURANT_LNG = 81.84516284402
+
+const FREE_DELIVERY_KM = 3
+const DELIVERY_CHARGE_PER_KM = 10
+
+const MIN_ORDER_AMOUNT = 200
+
+// Discount tiers — sorted by minAmount ascending
+const DISCOUNT_TIERS = [
+  { minAmount: 300, discountPercent: 10, label: '10% OFF', emoji: '🔥' },
+  { minAmount: 500, discountPercent: 15, label: '15% OFF', emoji: '⚡' },
+  { minAmount: 800, discountPercent: 20, label: '20% OFF', emoji: '💥' },
+]
+
 const menuImages = import.meta.glob('./resources/*.jpeg', { eager: true, query: '?url', import: 'default' })
 
-// Build photoMap dynamically — extract filename from path
 const photoMap = {}
 for (const [path, module] of Object.entries(menuImages)) {
   const filename = path.replace('./resources/', '')
@@ -18,11 +32,15 @@ for (const [path, module] of Object.entries(menuImages)) {
   }
 }
 
-// Build MENU from items.json with images
 const MENU = itemsData.items.map(item => ({
   id: item.id,
   name: item.itemName,
-  price: item.price,
+  // `price` is required for single-price items. For half/full items it falls
+  // back to priceFull/priceHalf so the item is always safe to render.
+  price: item.price ?? item.priceFull ?? item.priceHalf ?? 0,
+  priceHalf: item.priceHalf ?? null,
+  priceFull: item.priceFull ?? null,
+  hasHalfFull: !!(item.priceHalf != null && item.priceFull != null),
   desc: item.description,
   img: photoMap[item.photoName],
   category: item.category,
@@ -32,24 +50,38 @@ const CONFIG = itemsData
 const SHOP_OPEN = CONFIG.shopOpen
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-// Helper function to check if shop is open based on operating hours
+const haversineDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+const calcDeliveryCharge = (distanceKm) => {
+  if (distanceKm == null || distanceKm <= 0) return 0
+  if (distanceKm <= FREE_DELIVERY_KM) return 0
+  const extraKm = Math.round(distanceKm - FREE_DELIVERY_KM)
+  if (extraKm <= 0) return 0
+  return extraKm * DELIVERY_CHARGE_PER_KM
+}
+
 const isShopOperating = () => {
   if (!SHOP_OPEN) return false
-
   const config = CONFIG.operatingHours
   if (!config.enabled) return true
-
   const now = new Date()
   const dayName = now.toLocaleDateString('en-US', { weekday: 'long' })
   const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
-
-  const isOperatingDay = config.days.includes(dayName)
-  const isOperatingTime = currentTime >= config.openTime && currentTime < config.closeTime
-
-  return isOperatingDay && isOperatingTime
+  return config.days.includes(dayName) && currentTime >= config.openTime && currentTime < config.closeTime
 }
 
-// Format time from 24h to 12h format
 const formatTime = (time24) => {
   const [h, m] = time24.split(':')
   const hour = parseInt(h)
@@ -58,7 +90,6 @@ const formatTime = (time24) => {
   return `${hour12}:${m} ${ampm}`
 }
 
-// Get list of closed days dynamically
 const getClosedDaysList = (openDays) => {
   const closedDays = ALL_DAYS.filter(d => !openDays.includes(d))
   const dayLabels = {
@@ -68,12 +99,9 @@ const getClosedDaysList = (openDays) => {
   return closedDays.map(d => dayLabels[d] || d)
 }
 
-// Get closure reason message — fully dynamic
 const getClosureMessage = (shopOpen, config) => {
   const openTimeFormatted = formatTime(config.openTime)
   const closeTimeFormatted = formatTime(config.closeTime)
-
-  // If manually closed via shopOpen flag
   if (!shopOpen) {
     return {
       icon: '🔒',
@@ -81,13 +109,10 @@ const getClosureMessage = (shopOpen, config) => {
       detail: "We're temporarily unavailable. Thank you for your patience. Please reach out to us via WhatsApp to enquire or pre-order."
     }
   }
-
   if (!config.enabled) return null
-
   const now = new Date()
   const dayName = now.toLocaleDateString('en-US', { weekday: 'long' })
   const isOperatingDay = config.days.includes(dayName)
-
   if (!isOperatingDay) {
     const closedList = getClosedDaysList(config.days)
     return {
@@ -106,16 +131,80 @@ const getClosureMessage = (shopOpen, config) => {
   }
 }
 
+// Calculate discount info from subtotal
+const getDiscountInfo = (subtotal) => {
+  // Find the highest tier the subtotal qualifies for
+  let activeTier = null
+  for (const tier of DISCOUNT_TIERS) {
+    if (subtotal >= tier.minAmount) {
+      activeTier = tier
+    }
+  }
+  if (!activeTier) return { tier: null, discountPercent: 0, discountAmount: 0 }
+
+  const discountPercent = activeTier.discountPercent
+  const discountAmount = Math.round((subtotal * discountPercent) / 100)
+  return { tier: activeTier, discountPercent, discountAmount }
+}
+
+// Find next tier the user is aiming for
+const getNextTier = (subtotal) => {
+  for (const tier of DISCOUNT_TIERS) {
+    if (subtotal < tier.minAmount) return tier
+  }
+  return null
+}
+
+// Calculate progress percentage — aligned with the ladder visual bar
+// The bar spans from MIN_ORDER_AMOUNT (₹200) to max tier (₹800)
+// Progress = (subtotal - MIN_ORDER) / (maxTier - MIN_ORDER) * 100
+// This matches marker positions e.g. ₹300 → 16.7%, ₹500 → 50%, ₹800 → 100%
+const getDiscountProgress = (subtotal) => {
+  const maxTier = DISCOUNT_TIERS[DISCOUNT_TIERS.length - 1].minAmount
+  const range = maxTier - MIN_ORDER_AMOUNT
+  if (subtotal >= maxTier) return 100
+  if (subtotal <= MIN_ORDER_AMOUNT) return 0
+  return Math.min(100, ((subtotal - MIN_ORDER_AMOUNT) / range) * 100)
+}
+
 const CATEGORIES = ['All', 'Chinese', 'Chaap Specials', 'Thali', 'Indian Gravy', 'Combos', 'Momos']
 
+const buildInitQuantities = () => {
+  const q = {}
+  MENU.forEach(item => {
+    if (item.hasHalfFull) {
+      q[`${item.id}_half`] = 0
+      q[`${item.id}_full`] = 0
+    } else {
+      q[`${item.id}`] = 0
+    }
+  })
+  return q
+}
+
+const resolveItem = (key) => {
+  const [idStr, variant] = key.includes('_') ? key.split('_') : [key, null]
+  const id = parseInt(idStr)
+  const item = MENU.find(m => m.id === id)
+  if (!item) return null
+  if (variant === 'half' && item.hasHalfFull) {
+    return { ...item, displayPrice: item.priceHalf, displayName: `${item.name} (Half)`, badge: 'Half' }
+  }
+  if (variant === 'full' && item.hasHalfFull) {
+    return { ...item, displayPrice: item.priceFull, displayName: `${item.name} (Full)`, badge: 'Full' }
+  }
+  return { ...item, displayPrice: item.price, displayName: item.name, badge: '' }
+}
+
 function App() {
-  const [quantities, setQuantities] = useState(() => MENU.reduce((acc, it) => ({ ...acc, [it.id]: 0 }), {}))
+  const [quantities, setQuantities] = useState(buildInitQuantities)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
   const [mobile, setMobile] = useState('')
   const [instructions, setInstructions] = useState('')
   const [location, setLocation] = useState(null)
   const [locating, setLocating] = useState(false)
+  const [deliveryDistance, setDeliveryDistance] = useState(null)
   const [activeCat, setActiveCat] = useState('All')
   const [navOpen, setNavOpen] = useState(false)
   const [view, setView] = useState('menu')
@@ -124,8 +213,11 @@ function App() {
   const [touchEnd, setTouchEnd] = useState(0)
   const [isOpen, setIsOpen] = useState(isShopOperating())
   const [exploreMenu, setExploreMenu] = useState(false)
+  const [celebratedTier, setCelebratedTier] = useState(null) // tracks which tier to celebrate
+  const [showCelebration, setShowCelebration] = useState(false)
   const orderPanelRef = useRef(null)
   const catRowRef = useRef(null)
+  const prevTierRef = useRef(null)
 
   const navigate = (newView) => {
     setView(newView)
@@ -139,7 +231,6 @@ function App() {
     else if (p.includes('contact')) setView('contact')
     else if (p.includes('about')) setView('about')
     else setView('menu')
-
     const onPop = (e) => {
       const state = (e.state && e.state.view) || window.location.pathname.replace(/\/$/, '')
       if (state === '' || state === '/' ) setView('menu')
@@ -151,21 +242,52 @@ function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const inc = (id) => setQuantities(q => ({ ...q, [id]: (q[id] || 0) + 1 }))
-  const dec = (id) => setQuantities(q => ({ ...q, [id]: Math.max(0, (q[id] || 0) - 1) }))
-  const setQty = (id, val) => setQuantities(q => ({ ...q, [id]: Math.max(0, Number(val) || 0) }))
+  const inc = (key) => setQuantities(q => ({ ...q, [key]: (q[key] || 0) + 1 }))
+  const dec = (key) => setQuantities(q => ({ ...q, [key]: Math.max(0, (q[key] || 0) - 1) }))
+  const setQty = (key, val) => setQuantities(q => ({ ...q, [key]: Math.max(0, Number(val) || 0) }))
 
   const visibleMenu = useMemo(() => MENU.filter(m => activeCat === 'All' || m.category === activeCat), [activeCat])
 
-  const orderLines = MENU.map(item => {
-    const qty = quantities[item.id] || 0
-    return { ...item, qty, lineTotal: qty * item.price }
-  }).filter(x => x.qty > 0)
+  const orderLines = useMemo(() => {
+    const lines = []
+    for (const [key, qty] of Object.entries(quantities)) {
+      if (!qty || qty <= 0) continue
+      const info = resolveItem(key)
+      if (info) {
+        lines.push({ ...info, qty, lineTotal: qty * info.displayPrice })
+      }
+    }
+    return lines
+  }, [quantities])
 
   const subtotal = orderLines.reduce((s, it) => s + it.lineTotal, 0)
-  const total = subtotal
+  const deliveryCharge = deliveryDistance != null ? calcDeliveryCharge(deliveryDistance) : 0
 
-  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen
+  // Discount logic
+  const { tier: activeTier, discountPercent, discountAmount } = getDiscountInfo(subtotal)
+  const nextTier = getNextTier(subtotal)
+  const discountProgress = getDiscountProgress(subtotal)
+  const meetsMinOrder = subtotal >= MIN_ORDER_AMOUNT
+  const shortfallMin = Math.max(0, MIN_ORDER_AMOUNT - subtotal)
+  const shortfallNext = nextTier ? Math.max(0, nextTier.minAmount - subtotal) : 0
+
+  // Detect tier unlock for celebration
+  useEffect(() => {
+    const currentTierKey = activeTier ? activeTier.minAmount : 0
+    if (currentTierKey !== prevTierRef.current) {
+      if (currentTierKey > 0 && (prevTierRef.current === null || currentTierKey > prevTierRef.current)) {
+        setCelebratedTier(activeTier)
+        setShowCelebration(true)
+        setTimeout(() => setShowCelebration(false), 6000)
+      }
+      prevTierRef.current = currentTierKey
+    }
+  }, [activeTier, subtotal])
+
+  const totalBeforeDiscount = subtotal + deliveryCharge
+  const total = totalBeforeDiscount - discountAmount
+
+  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen && meetsMinOrder
 
   const scrollToOrderPanel = () => {
     if (orderPanelRef.current) {
@@ -175,20 +297,35 @@ function App() {
 
   const placeOrder = () => {
     if (!canPlace) {
+      if (!meetsMinOrder) {
+        alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
+        return
+      }
       alert('Please enter name, address and select at least one item before placing the order.')
       return
     }
 
     let msg = `Mood Fresher - New order from website\nName: ${name}\nMobile: ${mobile}\nAddress: ${address}\n\nItems:\n`
-    orderLines.forEach(it => { msg += `${it.name} x ${it.qty} = ₹${it.lineTotal}\n` })
-    msg += `\nSubtotal: ₹${subtotal}\nTotal: ₹${total}`
+    orderLines.forEach(it => {
+      msg += `${it.displayName} x ${it.qty} = ₹${it.lineTotal}\n`
+    })
+    msg += `\nSubtotal: ₹${subtotal}`
+    if (deliveryCharge > 0) {
+      const roundedKm = Math.round(deliveryDistance - FREE_DELIVERY_KM)
+      msg += `\nDelivery Charge (${roundedKm} km beyond ${FREE_DELIVERY_KM}km): ₹${deliveryCharge}`
+    } else if (deliveryDistance != null) {
+      msg += `\nDelivery Charge: Free`
+    }
+    if (discountAmount > 0) {
+      msg += `\nDiscount (${discountPercent}% OFF): -₹${discountAmount}`
+    }
+    msg += `\nTotal: ₹${total}`
     if (instructions && instructions.trim()) {
       msg += `\n\nInstructions: ${instructions.trim()}`
     }
     if (location) {
       msg += `\n\n📍 Live Location: ${location}`
     }
-
     const encoded = encodeURIComponent(msg)
     const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`
     window.open(waLink, '_blank')
@@ -207,14 +344,11 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    document.title = 'MoodFresher — Cafe & Restaurant'
-  }, [])
+  useEffect(() => { document.title = 'MoodFresher — Cafe & Restaurant' }, [])
 
   useEffect(() => {
     const current = isShopOperating()
     setIsOpen(current)
-    // Reset exploreMenu when shop opens
     if (current) setExploreMenu(false)
     const timer = setInterval(() => {
       const newVal = isShopOperating()
@@ -225,19 +359,15 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCarouselIdx(prev => (prev + 1) % 3)
-    }, 3000)
+    const timer = setInterval(() => { setCarouselIdx(prev => (prev + 1) % 3) }, 3000)
     return () => clearInterval(timer)
   }, [])
 
-  // Dynamic closure info
   const closureInfo = !isOpen ? getClosureMessage(SHOP_OPEN, CONFIG.operatingHours) : null
 
   return (
     <div className="app-root">
       <header className="topbar">
-        <button className="hamburger" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
         <div className="brand">
           <img className="brand-logo" src={brandLogo} alt="MoodFresher" />
           <div className="brand-text">
@@ -245,12 +375,17 @@ function App() {
             <div className="tag">Cafe & Restaurant</div>
           </div>
         </div>
+        <nav className="top-nav">
+          <button className={view === 'menu' ? 'active' : ''} onClick={() => navigate('menu')}>Menu</button>
+          <button className={view === 'contact' ? 'active' : ''} onClick={() => navigate('contact')}>Contact</button>
+          <button className={view === 'about' ? 'active' : ''} onClick={() => navigate('about')}>About</button>
+        </nav>
         <div className="top-actions">
           <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) scrollToOrderPanel() }}>🛒<span className="cart-count">{cartCount}</span></div>
+          <button className="hamburger" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
         </div>
       </header>
 
-      {/* Navigation drawer */}
       <div className={"nav-drawer" + (navOpen ? ' open' : '')} onClick={() => setNavOpen(false)}>
         <nav className="nav-inner" onClick={e => e.stopPropagation()}>
           <button className="nav-close" onClick={() => setNavOpen(false)}>✕</button>
@@ -274,8 +409,14 @@ function App() {
               <button className="secondary" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Call / WhatsApp</button>
             </div>
           </section>
-
           <section className="info-section">
+            <div className="free-delivery-banner" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
+              <span className="fd-icon">🚚</span>
+              <div className="fd-text">
+                <div className="fd-title">FREE DELIVERY</div>
+                <div className="fd-sub">Free within <strong>3 km</strong> • just <strong>₹10/km</strong> beyond</div>
+              </div>
+            </div>
             <div className="carousel-wrapper" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
               <div className="carousel-items" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
                 <div className="carousel-item">
@@ -304,7 +445,6 @@ function App() {
         </>
       )}
 
-      {/* Overlay when shop is closed — blurs all content beneath */}
       {!isOpen && !exploreMenu && (
         <div className="shop-closed-overlay">
           <div className="shop-closed-card">
@@ -315,15 +455,9 @@ function App() {
               You can still explore our menu below, but ordering will not be available.
             </p>
             <div className="closed-actions">
-              <button className="primary" onClick={() => setExploreMenu(true)}>
-                Explore Menu
-              </button>
-              <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
-                Message on WhatsApp
-              </button>
-              <button className="secondary" onClick={() => { navigate('contact'); }}>
-                Contact Us
-              </button>
+              <button className="primary" onClick={() => setExploreMenu(true)}>Explore Menu</button>
+              <button className="wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Message on WhatsApp</button>
+              <button className="secondary" onClick={() => { navigate('contact'); }}>Contact Us</button>
             </div>
           </div>
         </div>
@@ -352,14 +486,41 @@ function App() {
                         <div className="menu-title">{item.name}</div>
                         <div className="menu-desc">{item.desc}</div>
                       </div>
-                      <div className="menu-footer">
-                        <div className="price">₹{item.price}</div>
-                        <div className="qty-controls">
-                          <button className="small" disabled={!isOpen} onClick={() => dec(item.id)}>-</button>
-                          <input value={quantities[item.id] || 0} onChange={e => setQty(item.id, e.target.value)} disabled={!isOpen} />
-                          <button className="small" disabled={!isOpen} onClick={() => inc(item.id)}>+</button>
+                      {item.hasHalfFull ? (
+                        <div className="menu-footer half-full-footer">
+                          <div className="variant-row">
+                            <div className="variant-info">
+                              <span className="variant-label half-label">½ Half</span>
+                              <span className="variant-price">₹{item.priceHalf}</span>
+                            </div>
+                            <div className="qty-controls">
+                              <button className="small" disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>-</button>
+                              <input value={quantities[`${item.id}_half`] || 0} onChange={e => setQty(`${item.id}_half`, e.target.value)} disabled={!isOpen} />
+                              <button className="small" disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
+                            </div>
+                          </div>
+                          <div className="variant-row">
+                            <div className="variant-info">
+                              <span className="variant-label full-label">Full</span>
+                              <span className="variant-price">₹{item.priceFull}</span>
+                            </div>
+                            <div className="qty-controls">
+                              <button className="small" disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>-</button>
+                              <input value={quantities[`${item.id}_full`] || 0} onChange={e => setQty(`${item.id}_full`, e.target.value)} disabled={!isOpen} />
+                              <button className="small" disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="menu-footer">
+                          <div className="price">₹{item.price}</div>
+                          <div className="qty-controls">
+                            <button className="small" disabled={!isOpen} onClick={() => dec(`${item.id}`)}>-</button>
+                            <input value={quantities[item.id] || 0} onChange={e => setQty(`${item.id}`, e.target.value)} disabled={!isOpen} />
+                            <button className="small" disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -367,16 +528,148 @@ function App() {
             </section>
 
             <aside className="order-panel" ref={orderPanelRef}>
+              {/* Celebration overlay */}
+              {showCelebration && celebratedTier && (() => {
+                const nextTierAfter = getNextTier(celebratedTier.minAmount)
+                const amtSaved = Math.round((subtotal * celebratedTier.discountPercent) / 100)
+                return (
+                  <div className="celebration-overlay">
+                    <div className="celebration-content">
+                      <div className="celebration-sparkles">✨🎉✨</div>
+                      <div className="celebration-title">{celebratedTier.emoji} {celebratedTier.label} Unlocked!</div>
+                      <div className="celebration-sub">You saved ₹{amtSaved} on this order! 🎊</div>
+                      <div className="celebration-bar">
+                        <div className="celebration-fill" style={{ width: '100%' }}></div>
+                      </div>
+                      {nextTierAfter && (
+                        <div className="celebration-upsell">
+                          <div className="upsell-divider"></div>
+                          <div className="upsell-text">
+                            ⬆️ Add <strong>₹{Math.max(0, nextTierAfter.minAmount - subtotal)}</strong> more to get <strong>{nextTierAfter.emoji} {nextTierAfter.label}</strong>
+                          </div>
+                        </div>
+                      )}
+                      {!nextTierAfter && (
+                        <div className="celebration-upsell">
+                          <div className="upsell-divider"></div>
+                          <div className="upsell-text max">
+                            🏆 Maximum discount achieved! You're saving big today.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+
               <h4>Order summary</h4>
+
+              {/* Discount Ladder / Progress Bar — always visible when items are selected */}
+              {subtotal > 0 && (
+                <div className="discount-ladder">
+                  <div className="ladder-header">
+                    <span className="ladder-title">🎯 Discount Ladder</span>
+                    {activeTier ? (
+                      <span className="ladder-badge unlocked">{activeTier.emoji} {activeTier.label}</span>
+                    ) : (
+                      <span className="ladder-badge locked">No discount</span>
+                    )}
+                  </div>
+                  <div className="ladder-track">
+                    <div className="ladder-progress" style={{ width: `${discountProgress}%` }}></div>
+                    {DISCOUNT_TIERS.map(tier => {
+                      // Calculate position percentage
+                      const idx = DISCOUNT_TIERS.indexOf(tier)
+                      const prev = idx === 0 ? MIN_ORDER_AMOUNT : DISCOUNT_TIERS[idx - 1].minAmount
+                      const next = tier.minAmount
+                      const range = next - prev
+                      // Approximate position on bar (0 to 100)
+                      const pos = ((tier.minAmount - MIN_ORDER_AMOUNT) / (DISCOUNT_TIERS[DISCOUNT_TIERS.length - 1].minAmount - MIN_ORDER_AMOUNT)) * 100
+                      const isUnlocked = subtotal >= tier.minAmount
+                      return (
+                        <div
+                          key={tier.minAmount}
+                          className={`ladder-marker ${isUnlocked ? 'unlocked' : 'locked'}`}
+                          style={{ left: `${Math.min(95, Math.max(5, pos))}%` }}
+                        >
+                          <div className="marker-dot">{isUnlocked ? '✓' : '🎯'}</div>
+                          <div className="marker-label">{tier.emoji} {tier.label}</div>
+                          <div className="marker-amount">₹{tier.minAmount}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="ladder-footer">
+                    {subtotal < MIN_ORDER_AMOUNT && (
+                      <div className="ladder-msg min-order-msg">
+                        🚫 Add ₹{shortfallMin} more — min order ₹{MIN_ORDER_AMOUNT}
+                      </div>
+                    )}
+                    {subtotal >= MIN_ORDER_AMOUNT && !activeTier && nextTier && (
+                      <div className="ladder-msg unlock-msg">
+                        🎯 Add ₹{shortfallNext} more to get {nextTier.emoji} {nextTier.label}
+                      </div>
+                    )}
+                    {activeTier && nextTier && (
+                      <div className="ladder-msg next-msg">
+                        ⬆️ Add ₹{shortfallNext} more to get {nextTier.emoji} {nextTier.label}
+                      </div>
+                    )}
+                    {activeTier && !nextTier && (
+                      <div className="ladder-msg max-msg">
+                        🏆 Max discount unlocked! You're saving {discountPercent}%
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {orderLines.length === 0 ? <div className="empty">No items selected</div> : (
                 <div>
                   <ul className="order-lines">
-                    {orderLines.map(it => (
-                      <li key={it.id}><span>{it.name} x {it.qty}</span><strong>₹{it.lineTotal}</strong></li>
+                    {orderLines.map((it, idx) => (
+                      <li key={idx}>
+                        <span>
+                          {it.displayName}
+                          <span className="line-qty"> x {it.qty}</span>
+                        </span>
+                        <strong>₹{it.lineTotal}</strong>
+                      </li>
                     ))}
                   </ul>
                   <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
+                  {deliveryDistance != null && (
+                    <div className="summary-row delivery">
+                      <span>
+                        Delivery
+                        <span className="delivery-distance">{deliveryDistance.toFixed(1)} km</span>
+                      </span>
+                      <span className={deliveryCharge > 0 ? '' : 'free-delivery'}>
+                        {deliveryCharge > 0 ? `₹${deliveryCharge}` : 'FREE'}
+                      </span>
+                    </div>
+                  )}
+                  {discountAmount > 0 && (
+                    <div className="summary-row discount-row">
+                      <span>
+                        Discount
+                        <span className="discount-badge">{discountPercent}% OFF</span>
+                      </span>
+                      <span className="discount-amount">-₹{discountAmount}</span>
+                    </div>
+                  )}
                   <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
+                  {deliveryDistance != null && deliveryCharge > 0 && (
+                    <div className="delivery-note">
+                      🚗 {FREE_DELIVERY_KM} km free, then ₹{DELIVERY_CHARGE_PER_KM}/km extra.
+                      Beyond {FREE_DELIVERY_KM} km: {Math.round(deliveryDistance - FREE_DELIVERY_KM)} km
+                    </div>
+                  )}
+                  {deliveryDistance != null && deliveryCharge === 0 && (
+                    <div className="delivery-note free">
+                      🚗 Free delivery within {FREE_DELIVERY_KM} km of our restaurant!
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -397,6 +690,8 @@ function App() {
                       (pos) => {
                         const lat = pos.coords.latitude
                         const lng = pos.coords.longitude
+                        const dist = haversineDistance(RESTAURANT_LAT, RESTAURANT_LNG, lat, lng)
+                        setDeliveryDistance(dist)
                         setLocation(`https://maps.google.com/?q=${lat},${lng}`)
                         setLocating(false)
                       },
@@ -413,7 +708,20 @@ function App() {
                 </button>
               </div>
 
-              <button className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`} onClick={placeOrder} disabled={!canPlace}>Place order</button>
+              <button
+                className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`}
+                onClick={canPlace ? placeOrder : () => {
+                  if (!meetsMinOrder) {
+                    alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
+                    scrollToOrderPanel()
+                  } else {
+                    alert('Please enter name, address and select at least one item before placing the order.')
+                  }
+                }}
+                disabled={false}
+              >
+                {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : canPlace ? 'Place order' : 'Enter details to order'}
+              </button>
             </aside>
           </main>
         ) : view === 'contact' ? (
@@ -421,7 +729,6 @@ function App() {
             <section>
               <h3>Contact Us</h3>
               <p>Have a question or want to place a large/bulk order? Reach out using the details below or message us on WhatsApp.</p>
-
               <div className="contact-grid">
                 <div className="contact-card">
                   <span className="contact-icon">📞</span>
@@ -445,7 +752,6 @@ function App() {
                   </div>
                 </div>
               </div>
-
               <h4>Opening Hours</h4>
               <table className="opening-table">
                 <tbody>
@@ -475,13 +781,11 @@ function App() {
                   })()}
                 </tbody>
               </table>
-
               <div>
                 <h4>Bulk & Catering</h4>
                 <p>We accept orders for parties & marriages. Bulk orders starting from 50+ plates — message us for a quote.</p>
               </div>
             </section>
-
             <aside className="order-panel">
               <h4>Quick Contact</h4>
               <p style={{color:'var(--text-secondary)',marginTop:6,fontSize:14}}>Send a WhatsApp message with your query</p>
@@ -503,8 +807,13 @@ function App() {
 
         {view === 'menu' && cartCount > 0 && (
           <div className="bottom-bar">
-            <div className="left">{cartCount} items • ₹{total}</div>
-            <button className="place" onClick={canPlace ? placeOrder : scrollToOrderPanel} disabled={false}>{canPlace ? 'Place order' : 'Enter details to order'}</button>
+            <div className="left">
+              {cartCount} items • ₹{total}
+              {discountAmount > 0 && <span className="bottom-discount"> (-₹{discountAmount})</span>}
+            </div>
+            <button className="place" onClick={canPlace ? placeOrder : scrollToOrderPanel} disabled={false}>
+              {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT}` : canPlace ? 'Place order' : 'Enter details'}
+            </button>
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@
     "Momos"
   ],
   "_categoryHelp": "Use any of the above categories for the 'category' field in items below. 'All' is reserved for filtering and should NOT be used as an item category.",
+  "_priceHelp": "Two ways to price a dish: (1) Single price -> add ONLY a 'price' field. (2) Half & Full plate -> add ONLY 'priceHalf' and 'priceFull' fields (do NOT add 'price'). The app auto-detects which layout to show. This is the ONLY file you need to edit to add/change dishes.",
   "shopOpen": true,
   "operatingHours": {
     "enabled": false,
@@ -20,7 +21,8 @@
     {
       "id": 1,
       "itemName": "Soya Chaap Biryani",
-      "price": 160,
+      "priceHalf": 90,
+      "priceFull": 160,
       "category": "Chaap Specials",
       "photoName": "SoyaChaap biryani.jpeg",
       "description": "Soya chaap biryani - flavorful & aromatic"
@@ -28,7 +30,8 @@
     {
       "id": 2,
       "itemName": "Paneer Butter Masala",
-      "price": 140,
+      "priceHalf": 80,
+      "priceFull": 140,
       "category": "Indian Gravy",
       "photoName": "menu1.jpeg",
       "description": "Soft paneer cubes in rich creamy tomato gravy"
@@ -36,7 +39,8 @@
     {
       "id": 3,
       "itemName": "Veg Chowmein",
-      "price": 120,
+      "priceHalf": 70,
+      "priceFull": 120,
       "category": "Chinese",
       "photoName": "Manchurian Noodles.jpeg",
       "description": "Hakka style stir fried noodles with veggies"
@@ -44,7 +48,8 @@
     {
       "id": 4,
       "itemName": "Manchurian Fried Rice",
-      "price": 140,
+      "priceHalf": 80,
+      "priceFull": 140,
       "category": "Chinese",
       "photoName": "Manchurian Fried Rice.jpeg",
       "description": "Fried rice tossed with manchurian veg"
@@ -52,7 +57,8 @@
     {
       "id": 5,
       "itemName": "Chilli Paneer Noodle",
-      "price": 150,
+      "priceHalf": 85,
+      "priceFull": 150,
       "category": "Chinese",
       "photoName": "Chilli Paneer Noodle.jpeg",
       "description": "Spicy chilli paneer with noodles"
@@ -60,7 +66,8 @@
     {
       "id": 6,
       "itemName": "Chilli Paneer Fried Rice",
-      "price": 150,
+      "priceHalf": 85,
+      "priceFull": 150,
       "category": "Chinese",
       "photoName": "CHilli Paneer Fried Rice.jpeg",
       "description": "Chilli paneer served with fried rice"
@@ -68,7 +75,8 @@
     {
       "id": 7,
       "itemName": "Achaari Chaap",
-      "price": 180,
+      "priceHalf": 100,
+      "priceFull": 180,
       "category": "Chaap Specials",
       "photoName": "Achaari Chaap.jpeg",
       "description": "Achaari marinated chaap, grilled to perfection"
@@ -76,7 +84,8 @@
     {
       "id": 8,
       "itemName": "Afgaani Chaap",
-      "price": 200,
+      "priceHalf": 110,
+      "priceFull": 200,
       "category": "Chaap Specials",
       "photoName": "Afgaani chaap.jpeg",
       "description": "Afgaani style chaap with rich flavours"
@@ -116,18 +125,20 @@
     {
       "id": 13,
       "itemName": "Mlaai Chaap",
-      "price": 200,
+      "priceHalf": 110,
+      "priceFull": 200,
       "category": "Chaap Specials",
       "photoName": "Mlaai Chaap.jpeg",
       "description": "Creamy malai chaap"
     },
-     {
+    {
       "id": 14,
       "itemName": "Maggie Momos",
-      "price": 100,
+      "priceHalf": 60,
+      "priceFull": 100,
       "category": "Momos",
       "photoName": "maggiemomos.jpeg",
       "description": "Good Malai momos"
-     }
+    }
   ]
 }
