@@ -490,7 +490,7 @@ function App() {
                         <div className="menu-footer half-full-footer">
                           <div className="variant-row">
                             <div className="variant-info">
-                              <span className="variant-label half-label">½ Half</span>
+                              <span className="variant-label half-label">Half</span>
                               <span className="variant-price">₹{item.priceHalf}</span>
                             </div>
                             <div className="qty-controls">
