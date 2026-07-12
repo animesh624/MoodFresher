@@ -92,7 +92,7 @@
     {
       "id": 10,
       "itemName": "Bahubali Thali",
-      "price": 320,
+      "price": 160,
       "category": "Thali",
       "photoName": "Bahubali Thali.jpeg",
       "description": "Hearty thali with multiple dishes"
@@ -100,7 +100,7 @@
     {
       "id": 11,
       "itemName": "Delux Thali",
-      "price": 260,
+      "price": 120,
       "category": "Thali",
       "photoName": "Delux Thaali.jpeg",
       "description": "Deluxe thali for a complete meal"
@@ -108,15 +108,15 @@
     {
       "id": 12,
       "itemName": "Premium Thali",
-      "price": 300,
+      "price": 140,
       "category": "Thali",
       "photoName": "Premium Thali.jpeg",
       "description": "Premium thali with special dishes"
     },
     {
       "id": 13,
-      "itemName": "Mlaai Chaap",
-      "price": 200,
+      "itemName": "Malai Chaap",
+      "price": 180,
       "category": "Chaap Specials",
       "photoName": "Mlaai Chaap.jpeg",
       "description": "Creamy malai chaap"
