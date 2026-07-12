@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import './App.css'
 
 import brandLogo from './resources/Logo.jpeg'
@@ -35,8 +35,6 @@ for (const [path, module] of Object.entries(menuImages)) {
 const MENU = itemsData.items.map(item => ({
   id: item.id,
   name: item.itemName,
-  // `price` is required for single-price items. For half/full items it falls
-  // back to priceFull/priceHalf so the item is always safe to render.
   price: item.price ?? item.priceFull ?? item.priceHalf ?? 0,
   priceHalf: item.priceHalf ?? null,
   priceFull: item.priceFull ?? null,
@@ -49,6 +47,18 @@ const MENU = itemsData.items.map(item => ({
 const CONFIG = itemsData
 const SHOP_OPEN = CONFIG.shopOpen
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+const CATEGORIES = ['All', 'Chinese', 'Chaap Specials', 'Thali', 'Indian Gravy', 'Combos', 'Momos']
+
+const CATEGORY_IMAGES = {
+  'All': brandLogo,
+  'Chinese': photoMap['Manchurian Fried Rice.jpeg'],
+  'Indian Gravy': photoMap['menu1.jpeg'],
+  'Chaap Specials': photoMap['Achaari Chaap.jpeg'],
+  'Thali': photoMap['Bahubali Thali.jpeg'],
+  'Combos': photoMap['Chaap Butter Msala RUmali Roti.jpeg'],
+  'Momos': photoMap['maggiemomos.jpeg'],
+}
 
 const haversineDistance = (lat1, lng1, lat2, lng2) => {
   const R = 6371
@@ -133,7 +143,6 @@ const getClosureMessage = (shopOpen, config) => {
 
 // Calculate discount info from subtotal
 const getDiscountInfo = (subtotal) => {
-  // Find the highest tier the subtotal qualifies for
   let activeTier = null
   for (const tier of DISCOUNT_TIERS) {
     if (subtotal >= tier.minAmount) {
@@ -167,8 +176,6 @@ const getDiscountProgress = (subtotal) => {
   return Math.min(100, ((subtotal - MIN_ORDER_AMOUNT) / range) * 100)
 }
 
-const CATEGORIES = ['All', 'Chinese', 'Chaap Specials', 'Thali', 'Indian Gravy', 'Combos', 'Momos']
-
 const buildInitQuantities = () => {
   const q = {}
   MENU.forEach(item => {
@@ -196,7 +203,42 @@ const resolveItem = (key) => {
   return { ...item, displayPrice: item.price, displayName: item.name, badge: '' }
 }
 
-function App() {
+/* ── Toast System ── */
+const ToastContext = createContext(null)
+function useToast() { return useContext(ToastContext) }
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([])
+  const toastIdRef = useRef(0)
+  const addToast = useCallback((type, message) => {
+    const id = ++toastIdRef.current
+    setToasts(prev => [...prev.slice(-2), { id, type, message }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
+  }, [])
+  const contextValue = useMemo(() => ({
+    success: (msg) => addToast('success', msg),
+    error: (msg) => addToast('error', msg),
+    info: (msg) => addToast('info', msg),
+  }), [addToast])
+  return (
+    <ToastContext.Provider value={contextValue}>
+      {children}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            <span className="toast-icon">{t.type === 'success' ? '✅' : t.type === 'error' ? '❌' : 'ℹ️'}</span>
+            <span className="toast-msg">{t.message}</span>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  )
+}
+
+/* ── Main App Content ── */
+function AppContent() {
+  const toast = useToast()
+
   const [quantities, setQuantities] = useState(buildInitQuantities)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
@@ -208,13 +250,11 @@ function App() {
   const [activeCat, setActiveCat] = useState('All')
   const [navOpen, setNavOpen] = useState(false)
   const [view, setView] = useState('menu')
-  const [carouselIdx, setCarouselIdx] = useState(0)
-  const [touchStart, setTouchStart] = useState(0)
-  const [touchEnd, setTouchEnd] = useState(0)
   const [isOpen, setIsOpen] = useState(isShopOperating())
   const [exploreMenu, setExploreMenu] = useState(false)
-  const [celebratedTier, setCelebratedTier] = useState(null) // tracks which tier to celebrate
+  const [celebratedTier, setCelebratedTier] = useState(null)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
   const orderPanelRef = useRef(null)
   const catRowRef = useRef(null)
   const prevTierRef = useRef(null)
@@ -298,10 +338,10 @@ function App() {
   const placeOrder = () => {
     if (!canPlace) {
       if (!meetsMinOrder) {
-        alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
+        toast.error(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
         return
       }
-      alert('Please enter name, address and select at least one item before placing the order.')
+      toast.error('Please enter name, address and select at least one item before placing the order.')
       return
     }
 
@@ -333,17 +373,6 @@ function App() {
 
   const cartCount = orderLines.reduce((s, it) => s + it.qty, 0)
 
-  const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX)
-  const handleTouchEnd = (e) => {
-    setTouchEnd(e.changedTouches[0].clientX)
-    if (touchStart - e.changedTouches[0].clientX > 50) {
-      setCarouselIdx(prev => (prev + 1) % 3)
-    }
-    if (e.changedTouches[0].clientX - touchStart > 50) {
-      setCarouselIdx(prev => (prev - 1 + 3) % 3)
-    }
-  }
-
   useEffect(() => { document.title = 'MoodFresher — Cafe & Restaurant' }, [])
 
   useEffect(() => {
@@ -358,12 +387,205 @@ function App() {
     return () => clearInterval(timer)
   }, [])
 
-  useEffect(() => {
-    const timer = setInterval(() => { setCarouselIdx(prev => (prev + 1) % 3) }, 3000)
-    return () => clearInterval(timer)
-  }, [])
-
   const closureInfo = !isOpen ? getClosureMessage(SHOP_OPEN, CONFIG.operatingHours) : null
+
+  /* ── Shared order content for sidebar & drawer ── */
+  const renderOrderContent = (inDrawer = false) => (
+    <>
+      {/* Celebration overlay - only in sidebar */}
+      {!inDrawer && showCelebration && celebratedTier && (() => {
+        const nextTierAfter = getNextTier(celebratedTier.minAmount)
+        const amtSaved = Math.round((subtotal * celebratedTier.discountPercent) / 100)
+        return (
+          <div className="celebration-overlay">
+            <div className="celebration-content">
+              <div className="celebration-sparkles">✨🎉✨</div>
+              <div className="celebration-title">{celebratedTier.emoji} {celebratedTier.label} Unlocked!</div>
+              <div className="celebration-sub">You saved ₹{amtSaved} on this order! 🎊</div>
+              <div className="celebration-bar">
+                <div className="celebration-fill" style={{ width: '100%' }}></div>
+              </div>
+              {nextTierAfter && (
+                <div className="celebration-upsell">
+                  <div className="upsell-divider"></div>
+                  <div className="upsell-text">
+                    ⬆️ Add <strong>₹{Math.max(0, nextTierAfter.minAmount - subtotal)}</strong> more to get <strong>{nextTierAfter.emoji} {nextTierAfter.label}</strong>
+                  </div>
+                </div>
+              )}
+              {!nextTierAfter && (
+                <div className="celebration-upsell">
+                  <div className="upsell-divider"></div>
+                  <div className="upsell-text max">
+                    🏆 Maximum discount achieved! You're saving big today.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
+      {!inDrawer && <h4>Order summary</h4>}
+
+      {/* Discount Ladder / Progress Bar */}
+      {subtotal > 0 && (
+        <div className="discount-ladder">
+          <div className="ladder-header">
+            <span className="ladder-title">🎯 Discount Ladder</span>
+            {activeTier ? (
+              <span className="ladder-badge unlocked">{activeTier.emoji} {activeTier.label}</span>
+            ) : (
+              <span className="ladder-badge locked">No discount</span>
+            )}
+          </div>
+          <div className="ladder-track">
+            <div className="ladder-progress" style={{ width: `${discountProgress}%` }}></div>
+            {DISCOUNT_TIERS.map(tier => {
+              const pos = ((tier.minAmount - MIN_ORDER_AMOUNT) / (DISCOUNT_TIERS[DISCOUNT_TIERS.length - 1].minAmount - MIN_ORDER_AMOUNT)) * 100
+              const isUnlocked = subtotal >= tier.minAmount
+              return (
+                <div
+                  key={tier.minAmount}
+                  className={`ladder-marker ${isUnlocked ? 'unlocked' : 'locked'}`}
+                  style={{ left: `${Math.min(95, Math.max(5, pos))}%` }}
+                >
+                  <div className="marker-dot">{isUnlocked ? '✓' : '🎯'}</div>
+                  <div className="marker-label">{tier.emoji} {tier.label}</div>
+                  <div className="marker-amount">₹{tier.minAmount}</div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="ladder-footer">
+            {subtotal < MIN_ORDER_AMOUNT && (
+              <div className="ladder-msg min-order-msg">
+                🚫 Add ₹{shortfallMin} more — min order ₹{MIN_ORDER_AMOUNT}
+              </div>
+            )}
+            {subtotal >= MIN_ORDER_AMOUNT && !activeTier && nextTier && (
+              <div className="ladder-msg unlock-msg">
+                🎯 Add ₹{shortfallNext} more to get {nextTier.emoji} {nextTier.label}
+              </div>
+            )}
+            {activeTier && nextTier && (
+              <div className="ladder-msg next-msg">
+                ⬆️ Add ₹{shortfallNext} more to get {nextTier.emoji} {nextTier.label}
+              </div>
+            )}
+            {activeTier && !nextTier && (
+              <div className="ladder-msg max-msg">
+                🏆 Max discount unlocked! You're saving {discountPercent}%
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Order lines */}
+      {orderLines.length === 0 ? <div className="empty">No items selected</div> : (
+        <div>
+          <ul className="order-lines">
+            {orderLines.map((it, idx) => (
+              <li key={idx}>
+                <span>
+                  {it.displayName}
+                  <span className="line-qty"> x {it.qty}</span>
+                </span>
+                <strong>₹{it.lineTotal}</strong>
+              </li>
+            ))}
+          </ul>
+          <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
+          {deliveryDistance != null && (
+            <div className="summary-row delivery">
+              <span>
+                Delivery
+                <span className="delivery-distance">{deliveryDistance.toFixed(1)} km</span>
+              </span>
+              <span className={deliveryCharge > 0 ? '' : 'free-delivery'}>
+                {deliveryCharge > 0 ? `₹${deliveryCharge}` : 'FREE'}
+              </span>
+            </div>
+          )}
+          {discountAmount > 0 && (
+            <div className="summary-row discount-row">
+              <span>
+                Discount
+                <span className="discount-badge">{discountPercent}% OFF</span>
+              </span>
+              <span className="discount-amount">-₹{discountAmount}</span>
+            </div>
+          )}
+          <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
+          {deliveryDistance != null && deliveryCharge > 0 && (
+            <div className="delivery-note">
+              🚗 {FREE_DELIVERY_KM} km free, then ₹{DELIVERY_CHARGE_PER_KM}/km extra.
+              Beyond {FREE_DELIVERY_KM} km: {Math.round(deliveryDistance - FREE_DELIVERY_KM)} km
+            </div>
+          )}
+          {deliveryDistance != null && deliveryCharge === 0 && (
+            <div className="delivery-note free">
+              🚗 Free delivery within {FREE_DELIVERY_KM} km of our restaurant!
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Customer inputs */}
+      <div className="cust-inputs">
+        <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={!isOpen} />
+        <input placeholder="Mobile number" value={mobile} onChange={e => setMobile(e.target.value)} style={{marginTop:8}} disabled={!isOpen} />
+        <textarea placeholder="Delivery address" value={address} onChange={e => setAddress(e.target.value)} rows={3} disabled={!isOpen} />
+        <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
+        <button
+          className={`loc-btn ${location ? 'shared' : ''}`}
+          onClick={() => {
+            if (!navigator.geolocation) {
+              toast.error('Geolocation is not supported by your browser.')
+              return
+            }
+            setLocating(true)
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const lat = pos.coords.latitude
+                const lng = pos.coords.longitude
+                const dist = haversineDistance(RESTAURANT_LAT, RESTAURANT_LNG, lat, lng)
+                setDeliveryDistance(dist)
+                setLocation(`https://maps.google.com/?q=${lat},${lng}`)
+                setLocating(false)
+                toast.success('Location shared successfully!')
+              },
+              (err) => {
+                toast.error('Could not get your location. Please enable location access and try again.')
+                setLocating(false)
+              },
+              { enableHighAccuracy: true, timeout: 10000 }
+            )
+          }}
+          disabled={!isOpen || locating}
+        >
+          {locating ? '📍 Getting location...' : location ? '📍 Location shared ✓' : '📍 Share live location'}
+        </button>
+      </div>
+
+      {/* Place order button */}
+      <button
+        className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`}
+        onClick={canPlace ? placeOrder : () => {
+          if (!meetsMinOrder) {
+            toast.error(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
+            scrollToOrderPanel()
+          } else {
+            toast.error('Please enter name, address and select at least one item before placing the order.')
+          }
+        }}
+        disabled={false}
+      >
+        {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : canPlace ? 'Place order' : 'Enter details to order'}
+      </button>
+    </>
+  )
 
   return (
     <div className="app-root">
@@ -374,6 +596,7 @@ function App() {
             <div className="logo">MoodFresher</div>
             <div className="tag">Cafe & Restaurant</div>
           </div>
+          <span className="veg-badge">🟢 VEG</span>
         </div>
         <nav className="top-nav">
           <button className={view === 'menu' ? 'active' : ''} onClick={() => navigate('menu')}>Menu</button>
@@ -381,7 +604,7 @@ function App() {
           <button className={view === 'about' ? 'active' : ''} onClick={() => navigate('about')}>About</button>
         </nav>
         <div className="top-actions">
-          <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) scrollToOrderPanel() }}>🛒<span className="cart-count">{cartCount}</span></div>
+          <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) { if (window.innerWidth <= 900) { setCartDrawerOpen(true) } else { scrollToOrderPanel() } } }}>🛒<span className="cart-count">{cartCount}</span></div>
           <button className="hamburger" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
         </div>
       </header>
@@ -402,43 +625,43 @@ function App() {
       {view === 'menu' && (
         <>
           <section className="hero-banner">
-            <h2>Delicious Food, Delivered Fresh!</h2>
-            <p>Order Direct & Save More</p>
-            <div className="hero-actions">
-              <button className="primary" onClick={() => { const el = document.querySelector('.menu-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore our menu</button>
-              <button className="secondary" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Call / WhatsApp</button>
+            <div className="hero-content">
+              <span className="hero-veg-badge">🟢 100% VEG</span>
+              <h2>Delicious Food, Delivered Fresh!</h2>
+              <p className="hero-subtitle">Order Direct & Save More — No Middlemen, Just Great Food</p>
+              <div className="hero-trust-row">
+                <span className="hero-trust-item">🏷️ Better Prices</span>
+                <span className="hero-trust-item">🍳 Freshly Prepared</span>
+                <span className="hero-trust-item">✅ Hygienic Food</span>
+                <span className="hero-trust-item">🚗 Fast Delivery</span>
+              </div>
+              <div className="hero-actions">
+                <button className="hero-btn-primary" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Order on WhatsApp</button>
+                <button className="hero-btn-secondary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore Menu</button>
+              </div>
             </div>
           </section>
-          <section className="info-section">
-            <div className="free-delivery-banner" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
-              <span className="fd-icon">🚚</span>
-              <div className="fd-text">
-                <div className="fd-title">FREE DELIVERY</div>
-                <div className="fd-sub">Free within <strong>3 km</strong> • just <strong>₹10/km</strong> beyond</div>
+
+          <section className="promo-strip">
+            <div className="promo-card promo-green" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
+              <span className="promo-icon">🚚</span>
+              <div className="promo-text">
+                <div className="promo-title">FREE DELIVERY</div>
+                <div className="promo-sub">Within 3 km • ₹10/km beyond</div>
               </div>
             </div>
-            <div className="carousel-wrapper" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-              <div className="carousel-items" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
-                <div className="carousel-item">
-                  <span className="carousel-icon">💰</span>
-                  <h4>Best Prices</h4>
-                  <p>Order direct and save more — no middlemen, just great value.</p>
-                </div>
-                <div className="carousel-item">
-                  <span className="carousel-icon">🍳</span>
-                  <h4>Freshly Prepared</h4>
-                  <p>Made to order with fresh ingredients, every single time.</p>
-                </div>
-                <div className="carousel-item">
-                  <span className="carousel-icon">🚗</span>
-                  <h4>Fast Delivery</h4>
-                  <p>Typical delivery time 30–45 minutes, right to your door.</p>
-                </div>
+            <div className="promo-card promo-gold">
+              <span className="promo-icon">💰</span>
+              <div className="promo-text">
+                <div className="promo-title">BEST PRICES</div>
+                <div className="promo-sub">Order direct & save more</div>
               </div>
-              <div className="carousel-dots">
-                {[0, 1, 2].map(i => (
-                  <button key={i} className={`dot ${i === carouselIdx ? 'active' : ''}`} onClick={() => setCarouselIdx(i)} aria-label={`Slide ${i + 1}`}></button>
-                ))}
+            </div>
+            <div className="promo-card promo-orange">
+              <span className="promo-icon">🎉</span>
+              <div className="promo-text">
+                <div className="promo-title">PARTIES & MARRIAGE</div>
+                <div className="promo-sub">Bulk orders from 50+ plates</div>
               </div>
             </div>
           </section>
@@ -465,22 +688,35 @@ function App() {
 
       <div className={`content-wrapper ${!isOpen && !exploreMenu ? 'blurred' : ''}`}>
         {view === 'menu' && (
-          <div className="category-row" ref={catRowRef}>
-            {CATEGORIES.map(cat => (
-              <button key={cat} className={cat === activeCat ? 'cat active' : 'cat'} onClick={() => setActiveCat(cat)}>{cat}</button>
-            ))}
-            <button className="cat-arrow" onClick={() => { catRowRef.current?.scrollBy({ left: 200, behavior: 'smooth' }) }} aria-label="Scroll categories">›</button>
-          </div>
+          <section className="category-section">
+            <div className="category-section-title">
+              <span className="title-line"></span>
+              <h3>Explore Our Menu</h3>
+              <span className="title-line"></span>
+            </div>
+            <div className="category-row" ref={catRowRef}>
+              {CATEGORIES.map(cat => (
+                <button key={cat} className={`cat-item ${cat === activeCat ? 'active' : ''}`} onClick={() => setActiveCat(cat)}>
+                  <div className="cat-img-wrapper">
+                    <img className="cat-img" src={CATEGORY_IMAGES[cat]} alt={cat} />
+                  </div>
+                  <span className="cat-label">{cat}</span>
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
         {view === 'menu' ? (
           <main className="content">
             <section className="menu-section">
-              <h3>Explore our menu</h3>
               <div className="menu-grid">
                 {visibleMenu.map(item => (
                   <article className="menu-card" key={item.id}>
-                    <div className="food-img" aria-hidden style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                    <div className="menu-card-img-wrapper">
+                      <div className="food-img" style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                      <span className="veg-indicator">●</span>
+                    </div>
                     <div className="menu-info">
                       <div>
                         <div className="menu-title">{item.name}</div>
@@ -493,32 +729,44 @@ function App() {
                               <span className="variant-label half-label">Half</span>
                               <span className="variant-price">₹{item.priceHalf}</span>
                             </div>
-                            <div className="qty-controls">
-                              <button className="small" disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>-</button>
-                              <input value={quantities[`${item.id}_half`] || 0} onChange={e => setQty(`${item.id}_half`, e.target.value)} disabled={!isOpen} />
-                              <button className="small" disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
-                            </div>
+                            {quantities[`${item.id}_half`] > 0 ? (
+                              <div className="qty-stepper">
+                                <button disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>−</button>
+                                <span className="qty-value">{quantities[`${item.id}_half`]}</span>
+                                <button disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
+                              </div>
+                            ) : (
+                              <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); toast.success(`Added ${item.name} (Half)`); }}>ADD</button>
+                            )}
                           </div>
                           <div className="variant-row">
                             <div className="variant-info">
                               <span className="variant-label full-label">Full</span>
                               <span className="variant-price">₹{item.priceFull}</span>
                             </div>
-                            <div className="qty-controls">
-                              <button className="small" disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>-</button>
-                              <input value={quantities[`${item.id}_full`] || 0} onChange={e => setQty(`${item.id}_full`, e.target.value)} disabled={!isOpen} />
-                              <button className="small" disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
-                            </div>
+                            {quantities[`${item.id}_full`] > 0 ? (
+                              <div className="qty-stepper">
+                                <button disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>−</button>
+                                <span className="qty-value">{quantities[`${item.id}_full`]}</span>
+                                <button disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
+                              </div>
+                            ) : (
+                              <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); toast.success(`Added ${item.name} (Full)`); }}>ADD</button>
+                            )}
                           </div>
                         </div>
                       ) : (
                         <div className="menu-footer">
                           <div className="price">₹{item.price}</div>
-                          <div className="qty-controls">
-                            <button className="small" disabled={!isOpen} onClick={() => dec(`${item.id}`)}>-</button>
-                            <input value={quantities[item.id] || 0} onChange={e => setQty(`${item.id}`, e.target.value)} disabled={!isOpen} />
-                            <button className="small" disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
-                          </div>
+                          {quantities[item.id] > 0 ? (
+                            <div className="qty-stepper">
+                              <button disabled={!isOpen} onClick={() => dec(`${item.id}`)}>−</button>
+                              <span className="qty-value">{quantities[item.id]}</span>
+                              <button disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
+                            </div>
+                          ) : (
+                            <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); toast.success(`Added ${item.name}`); }}>ADD</button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -527,201 +775,9 @@ function App() {
               </div>
             </section>
 
+            {/* Desktop sidebar */}
             <aside className="order-panel" ref={orderPanelRef}>
-              {/* Celebration overlay */}
-              {showCelebration && celebratedTier && (() => {
-                const nextTierAfter = getNextTier(celebratedTier.minAmount)
-                const amtSaved = Math.round((subtotal * celebratedTier.discountPercent) / 100)
-                return (
-                  <div className="celebration-overlay">
-                    <div className="celebration-content">
-                      <div className="celebration-sparkles">✨🎉✨</div>
-                      <div className="celebration-title">{celebratedTier.emoji} {celebratedTier.label} Unlocked!</div>
-                      <div className="celebration-sub">You saved ₹{amtSaved} on this order! 🎊</div>
-                      <div className="celebration-bar">
-                        <div className="celebration-fill" style={{ width: '100%' }}></div>
-                      </div>
-                      {nextTierAfter && (
-                        <div className="celebration-upsell">
-                          <div className="upsell-divider"></div>
-                          <div className="upsell-text">
-                            ⬆️ Add <strong>₹{Math.max(0, nextTierAfter.minAmount - subtotal)}</strong> more to get <strong>{nextTierAfter.emoji} {nextTierAfter.label}</strong>
-                          </div>
-                        </div>
-                      )}
-                      {!nextTierAfter && (
-                        <div className="celebration-upsell">
-                          <div className="upsell-divider"></div>
-                          <div className="upsell-text max">
-                            🏆 Maximum discount achieved! You're saving big today.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })()}
-
-              <h4>Order summary</h4>
-
-              {/* Discount Ladder / Progress Bar — always visible when items are selected */}
-              {subtotal > 0 && (
-                <div className="discount-ladder">
-                  <div className="ladder-header">
-                    <span className="ladder-title">🎯 Discount Ladder</span>
-                    {activeTier ? (
-                      <span className="ladder-badge unlocked">{activeTier.emoji} {activeTier.label}</span>
-                    ) : (
-                      <span className="ladder-badge locked">No discount</span>
-                    )}
-                  </div>
-                  <div className="ladder-track">
-                    <div className="ladder-progress" style={{ width: `${discountProgress}%` }}></div>
-                    {DISCOUNT_TIERS.map(tier => {
-                      // Calculate position percentage
-                      const idx = DISCOUNT_TIERS.indexOf(tier)
-                      const prev = idx === 0 ? MIN_ORDER_AMOUNT : DISCOUNT_TIERS[idx - 1].minAmount
-                      const next = tier.minAmount
-                      const range = next - prev
-                      // Approximate position on bar (0 to 100)
-                      const pos = ((tier.minAmount - MIN_ORDER_AMOUNT) / (DISCOUNT_TIERS[DISCOUNT_TIERS.length - 1].minAmount - MIN_ORDER_AMOUNT)) * 100
-                      const isUnlocked = subtotal >= tier.minAmount
-                      return (
-                        <div
-                          key={tier.minAmount}
-                          className={`ladder-marker ${isUnlocked ? 'unlocked' : 'locked'}`}
-                          style={{ left: `${Math.min(95, Math.max(5, pos))}%` }}
-                        >
-                          <div className="marker-dot">{isUnlocked ? '✓' : '🎯'}</div>
-                          <div className="marker-label">{tier.emoji} {tier.label}</div>
-                          <div className="marker-amount">₹{tier.minAmount}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div className="ladder-footer">
-                    {subtotal < MIN_ORDER_AMOUNT && (
-                      <div className="ladder-msg min-order-msg">
-                        🚫 Add ₹{shortfallMin} more — min order ₹{MIN_ORDER_AMOUNT}
-                      </div>
-                    )}
-                    {subtotal >= MIN_ORDER_AMOUNT && !activeTier && nextTier && (
-                      <div className="ladder-msg unlock-msg">
-                        🎯 Add ₹{shortfallNext} more to get {nextTier.emoji} {nextTier.label}
-                      </div>
-                    )}
-                    {activeTier && nextTier && (
-                      <div className="ladder-msg next-msg">
-                        ⬆️ Add ₹{shortfallNext} more to get {nextTier.emoji} {nextTier.label}
-                      </div>
-                    )}
-                    {activeTier && !nextTier && (
-                      <div className="ladder-msg max-msg">
-                        🏆 Max discount unlocked! You're saving {discountPercent}%
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {orderLines.length === 0 ? <div className="empty">No items selected</div> : (
-                <div>
-                  <ul className="order-lines">
-                    {orderLines.map((it, idx) => (
-                      <li key={idx}>
-                        <span>
-                          {it.displayName}
-                          <span className="line-qty"> x {it.qty}</span>
-                        </span>
-                        <strong>₹{it.lineTotal}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
-                  {deliveryDistance != null && (
-                    <div className="summary-row delivery">
-                      <span>
-                        Delivery
-                        <span className="delivery-distance">{deliveryDistance.toFixed(1)} km</span>
-                      </span>
-                      <span className={deliveryCharge > 0 ? '' : 'free-delivery'}>
-                        {deliveryCharge > 0 ? `₹${deliveryCharge}` : 'FREE'}
-                      </span>
-                    </div>
-                  )}
-                  {discountAmount > 0 && (
-                    <div className="summary-row discount-row">
-                      <span>
-                        Discount
-                        <span className="discount-badge">{discountPercent}% OFF</span>
-                      </span>
-                      <span className="discount-amount">-₹{discountAmount}</span>
-                    </div>
-                  )}
-                  <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
-                  {deliveryDistance != null && deliveryCharge > 0 && (
-                    <div className="delivery-note">
-                      🚗 {FREE_DELIVERY_KM} km free, then ₹{DELIVERY_CHARGE_PER_KM}/km extra.
-                      Beyond {FREE_DELIVERY_KM} km: {Math.round(deliveryDistance - FREE_DELIVERY_KM)} km
-                    </div>
-                  )}
-                  {deliveryDistance != null && deliveryCharge === 0 && (
-                    <div className="delivery-note free">
-                      🚗 Free delivery within {FREE_DELIVERY_KM} km of our restaurant!
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="cust-inputs">
-                <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={!isOpen} />
-                <input placeholder="Mobile number" value={mobile} onChange={e => setMobile(e.target.value)} style={{marginTop:8}} disabled={!isOpen} />
-                <textarea placeholder="Delivery address" value={address} onChange={e => setAddress(e.target.value)} rows={3} disabled={!isOpen} />
-                <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
-                <button
-                  className={`loc-btn ${location ? 'shared' : ''}`}
-                  onClick={() => {
-                    if (!navigator.geolocation) {
-                      alert('Geolocation is not supported by your browser.')
-                      return
-                    }
-                    setLocating(true)
-                    navigator.geolocation.getCurrentPosition(
-                      (pos) => {
-                        const lat = pos.coords.latitude
-                        const lng = pos.coords.longitude
-                        const dist = haversineDistance(RESTAURANT_LAT, RESTAURANT_LNG, lat, lng)
-                        setDeliveryDistance(dist)
-                        setLocation(`https://maps.google.com/?q=${lat},${lng}`)
-                        setLocating(false)
-                      },
-                      (err) => {
-                        alert('Could not get your location. Please enable location access and try again.')
-                        setLocating(false)
-                      },
-                      { enableHighAccuracy: true, timeout: 10000 }
-                    )
-                  }}
-                  disabled={!isOpen || locating}
-                >
-                  {locating ? '📍 Getting location...' : location ? '📍 Location shared ✓' : '📍 Share live location'}
-                </button>
-              </div>
-
-              <button
-                className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`}
-                onClick={canPlace ? placeOrder : () => {
-                  if (!meetsMinOrder) {
-                    alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
-                    scrollToOrderPanel()
-                  } else {
-                    alert('Please enter name, address and select at least one item before placing the order.')
-                  }
-                }}
-                disabled={false}
-              >
-                {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : canPlace ? 'Place order' : 'Enter details to order'}
-              </button>
+              {renderOrderContent(false)}
             </aside>
           </main>
         ) : view === 'contact' ? (
@@ -794,30 +850,114 @@ function App() {
             </aside>
           </main>
         ) : (
-          <main className="content contact-page">
-            <section style={{padding:20}}>
+          <main className="content about-page">
+            <section className="about-section">
               <h3>About MoodFresher</h3>
-              <p>Delicious food delivered fresh. Made with love.</p>
-              <div style={{marginTop:24}}>
-                <button className="primary" onClick={() => navigate('menu')}>Explore our menu</button>
+              <p className="about-lead">Your favorite neighborhood cafe & restaurant in Prayagraj, serving delicious 100% vegetarian food with love since day one.</p>
+              <div className="about-grid">
+                <div className="about-card"><span className="about-card-icon">🍽️</span><h4>100% Vegetarian</h4><p>Pure vegetarian kitchen serving authentic Indian, Chinese, and fusion cuisine.</p></div>
+                <div className="about-card"><span className="about-card-icon">🏠</span><h4>Home-Style Taste</h4><p>Made fresh to order with quality ingredients, just like home cooking.</p></div>
+                <div className="about-card"><span className="about-card-icon">🚀</span><h4>Fast Delivery</h4><p>Quick delivery within 30-45 minutes to your doorstep.</p></div>
+                <div className="about-card"><span className="about-card-icon">💰</span><h4>Best Value</h4><p>Order direct and save more — no middlemen, just great prices.</p></div>
+              </div>
+              <div style={{marginTop: 32}}>
+                <button className="hero-btn-primary" onClick={() => navigate('menu')}>Explore Our Menu</button>
               </div>
             </section>
           </main>
         )}
 
+        {/* Footer */}
+        <footer className="site-footer">
+          <div className="footer-content">
+            <div className="footer-grid">
+              <div className="footer-col">
+                <div className="footer-brand">
+                  <img src={brandLogo} alt="MoodFresher" className="footer-logo" />
+                  <div>
+                    <div className="footer-brand-name">MoodFresher</div>
+                    <div className="footer-brand-tag">Cafe & Restaurant</div>
+                  </div>
+                </div>
+                <p className="footer-desc">Delicious food delivered fresh to your doorstep. Made with love in Prayagraj.</p>
+              </div>
+              <div className="footer-col">
+                <h4 className="footer-col-title">Quick Links</h4>
+                <ul className="footer-links">
+                  <li><button onClick={() => navigate('menu')}>🍽️ Menu</button></li>
+                  <li><button onClick={() => navigate('contact')}>📞 Contact</button></li>
+                  <li><button onClick={() => navigate('about')}>ℹ️ About</button></li>
+                </ul>
+              </div>
+              <div className="footer-col">
+                <h4 className="footer-col-title">Visit Us</h4>
+                <p className="footer-address">📍 27/17 Elgin Road, Civil Lines, Prayagraj</p>
+                <p className="footer-hours">🕐 {formatTime(CONFIG.operatingHours.openTime)} — {formatTime(CONFIG.operatingHours.closeTime)}</p>
+              </div>
+              <div className="footer-col">
+                <h4 className="footer-col-title">Get in Touch</h4>
+                <p className="footer-contact-item">📞 +91 {WHATSAPP_NUMBER.slice(2)}</p>
+                <p className="footer-contact-item">✉️ moodfresher.24@gmail.com</p>
+                <button className="footer-wa-btn" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>💬 Chat on WhatsApp</button>
+              </div>
+            </div>
+            <div className="trust-strip">
+              <div className="trust-strip-item"><span className="trust-strip-icon">🛒</span><div className="trust-strip-text"><div className="trust-strip-label">MIN ORDER</div><div>₹{MIN_ORDER_AMOUNT}</div></div></div>
+              <div className="trust-strip-item"><span className="trust-strip-icon">🕐</span><div className="trust-strip-text"><div className="trust-strip-label">DELIVERY TIME</div><div>30–45 min</div></div></div>
+              <div className="trust-strip-item"><span className="trust-strip-icon">✅</span><div className="trust-strip-text"><div className="trust-strip-label">SAFE & HYGIENIC</div><div>Packaging</div></div></div>
+              <div className="trust-strip-item"><span className="trust-strip-icon">💬</span><div className="trust-strip-text"><div className="trust-strip-label">LIVE SUPPORT</div><div>On WhatsApp</div></div></div>
+            </div>
+            <div className="footer-bottom">
+              <p>Thank you for choosing Mood Fresher! ❤️</p>
+              <p className="footer-copy">© {new Date().getFullYear()} MoodFresher. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
+
+        {/* Bottom Bar */}
         {view === 'menu' && cartCount > 0 && (
           <div className="bottom-bar">
-            <div className="left">
-              {cartCount} items • ₹{total}
-              {discountAmount > 0 && <span className="bottom-discount"> (-₹{discountAmount})</span>}
+            <div className="bottom-bar-left">
+              <span className="bottom-bar-count">{cartCount} item{cartCount > 1 ? 's' : ''}</span>
+              <span className="bottom-bar-total">₹{total}</span>
+              {discountAmount > 0 && <span className="bottom-bar-discount">saved ₹{discountAmount}</span>}
             </div>
-            <button className="place" onClick={canPlace ? placeOrder : scrollToOrderPanel} disabled={false}>
-              {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT}` : canPlace ? 'Place order' : 'Enter details'}
+            <button className="bottom-bar-btn" onClick={() => {
+              if (window.innerWidth <= 900) {
+                setCartDrawerOpen(true)
+              } else {
+                scrollToOrderPanel()
+              }
+            }}>
+              View Cart →
             </button>
           </div>
         )}
       </div>
+
+      {/* Cart Drawer - mobile */}
+      <div className={`cart-drawer-overlay ${cartDrawerOpen ? 'open' : ''}`} onClick={() => setCartDrawerOpen(false)}>
+        <div className={`cart-drawer ${cartDrawerOpen ? 'open' : ''}`} onClick={e => e.stopPropagation()}>
+          <div className="cart-drawer-handle"></div>
+          <div className="cart-drawer-header">
+            <h3>Your Cart</h3>
+            <span className="cart-drawer-count">{cartCount} items</span>
+            <button className="cart-drawer-close" onClick={() => setCartDrawerOpen(false)}>✕</button>
+          </div>
+          <div className="cart-drawer-body">
+            {renderOrderContent(true)}
+          </div>
+        </div>
+      </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   )
 }
 
