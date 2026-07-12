@@ -254,7 +254,6 @@ function AppContent() {
   const [exploreMenu, setExploreMenu] = useState(false)
   const [celebratedTier, setCelebratedTier] = useState(null)
   const [showCelebration, setShowCelebration] = useState(false)
-  const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
   const orderPanelRef = useRef(null)
   const catRowRef = useRef(null)
   const prevTierRef = useRef(null)
@@ -389,11 +388,11 @@ function AppContent() {
 
   const closureInfo = !isOpen ? getClosureMessage(SHOP_OPEN, CONFIG.operatingHours) : null
 
-  /* ── Shared order content for sidebar & drawer ── */
-  const renderOrderContent = (inDrawer = false) => (
+  /* ── Order Panel Content ── */
+  const renderOrderContent = () => (
     <>
-      {/* Celebration overlay - only in sidebar */}
-      {!inDrawer && showCelebration && celebratedTier && (() => {
+      {/* Celebration overlay */}
+      {showCelebration && celebratedTier && (() => {
         const nextTierAfter = getNextTier(celebratedTier.minAmount)
         const amtSaved = Math.round((subtotal * celebratedTier.discountPercent) / 100)
         return (
@@ -426,7 +425,7 @@ function AppContent() {
         )
       })()}
 
-      {!inDrawer && <h4>Order summary</h4>}
+      <h4>Order summary</h4>
 
       {/* Discount Ladder / Progress Bar */}
       {subtotal > 0 && (
@@ -604,7 +603,7 @@ function AppContent() {
           <button className={view === 'about' ? 'active' : ''} onClick={() => navigate('about')}>About</button>
         </nav>
         <div className="top-actions">
-          <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) { if (window.innerWidth <= 900) { setCartDrawerOpen(true) } else { scrollToOrderPanel() } } }}>🛒<span className="cart-count">{cartCount}</span></div>
+          <div className="cart" title="Cart" onClick={() => { if (cartCount > 0) scrollToOrderPanel() }}>🛒<span className="cart-count">{cartCount}</span></div>
           <button className="hamburger" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
         </div>
       </header>
@@ -775,9 +774,8 @@ function AppContent() {
               </div>
             </section>
 
-            {/* Desktop sidebar */}
             <aside className="order-panel" ref={orderPanelRef}>
-              {renderOrderContent(false)}
+              {renderOrderContent()}
             </aside>
           </main>
         ) : view === 'contact' ? (
@@ -922,33 +920,14 @@ function AppContent() {
               <span className="bottom-bar-total">₹{total}</span>
               {discountAmount > 0 && <span className="bottom-bar-discount">saved ₹{discountAmount}</span>}
             </div>
-            <button className="bottom-bar-btn" onClick={() => {
-              if (window.innerWidth <= 900) {
-                setCartDrawerOpen(true)
-              } else {
-                scrollToOrderPanel()
-              }
-            }}>
+            <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
               View Cart →
             </button>
           </div>
         )}
       </div>
 
-      {/* Cart Drawer - mobile */}
-      <div className={`cart-drawer-overlay ${cartDrawerOpen ? 'open' : ''}`} onClick={() => setCartDrawerOpen(false)}>
-        <div className={`cart-drawer ${cartDrawerOpen ? 'open' : ''}`} onClick={e => e.stopPropagation()}>
-          <div className="cart-drawer-handle"></div>
-          <div className="cart-drawer-header">
-            <h3>Your Cart</h3>
-            <span className="cart-drawer-count">{cartCount} items</span>
-            <button className="cart-drawer-close" onClick={() => setCartDrawerOpen(false)}>✕</button>
-          </div>
-          <div className="cart-drawer-body">
-            {renderOrderContent(true)}
-          </div>
-        </div>
-      </div>
+
     </div>
   )
 }
