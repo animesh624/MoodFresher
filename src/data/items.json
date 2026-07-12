@@ -12,7 +12,7 @@
   "_priceHelp": "Two ways to price a dish: (1) Single price -> add ONLY a 'price' field. (2) Half & Full plate -> add ONLY 'priceHalf' and 'priceFull' fields (do NOT add 'price'). The app auto-detects which layout to show. This is the ONLY file you need to edit to add/change dishes.",
   "shopOpen": true,
   "operatingHours": {
-    "enabled": false,
+    "enabled": true,
     "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "openTime": "17:00",
     "closeTime": "23:59"
@@ -101,7 +101,7 @@
     {
       "id": 10,
       "itemName": "Bahubali Thali",
-      "price": 320,
+      "price": 160,
       "category": "Thali",
       "photoName": "Bahubali Thali.jpeg",
       "description": "Hearty thali with multiple dishes"
@@ -109,7 +109,7 @@
     {
       "id": 11,
       "itemName": "Delux Thali",
-      "price": 260,
+      "price": 120,
       "category": "Thali",
       "photoName": "Delux Thaali.jpeg",
       "description": "Deluxe thali for a complete meal"
@@ -117,7 +117,7 @@
     {
       "id": 12,
       "itemName": "Premium Thali",
-      "price": 300,
+      "price": 140,
       "category": "Thali",
       "photoName": "Premium Thali.jpeg",
       "description": "Premium thali with special dishes"
