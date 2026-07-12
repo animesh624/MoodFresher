@@ -20,7 +20,7 @@
     {
       "id": 1,
       "itemName": "Soya Chaap Biryani",
-      "price": 160,
+      "price": 100,
       "category": "Chaap Specials",
       "photoName": "SoyaChaap biryani.jpeg",
       "description": "Soya chaap biryani - flavorful & aromatic"
@@ -28,7 +28,7 @@
     {
       "id": 2,
       "itemName": "Paneer Butter Masala",
-      "price": 140,
+      "price": 270,
       "category": "Indian Gravy",
       "photoName": "menu1.jpeg",
       "description": "Soft paneer cubes in rich creamy tomato gravy"
