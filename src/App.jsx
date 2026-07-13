@@ -637,7 +637,7 @@ function AppContent() {
                       <button disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
                     </div>
                   ) : (
-                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); toast.success(`Added ${item.name} (Half)`); }}>ADD</button>
+                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); }}>ADD</button>
                   )}
                 </div>
                 <div className="variant-row">
@@ -652,7 +652,7 @@ function AppContent() {
                       <button disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
                     </div>
                   ) : (
-                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); toast.success(`Added ${item.name} (Full)`); }}>ADD</button>
+                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); }}>ADD</button>
                   )}
                 </div>
               </div>
@@ -666,7 +666,7 @@ function AppContent() {
                     <button disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
                   </div>
                 ) : (
-                  <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); toast.success(`Added ${item.name}`); }}>ADD</button>
+                  <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); }}>ADD</button>
                 )}
               </div>
             )}
