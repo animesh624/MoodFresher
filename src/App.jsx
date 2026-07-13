@@ -51,7 +51,7 @@ const SHOP_OPEN = CONFIG.shopOpen
 const MAX_DELIVERY_DISTANCE = CONFIG.maxDeliveryDistance || 8
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-const CATEGORIES = ["All", "Chinese Combos", "Indian Combos", "Chauchak Chaap", "Tagda Tikka", "Chaap Specials", "Mazedaar Momo", "Raapchik Rolls", "Chinese", "Thali", "Rice Bowls", "Desert", "Indian Gravy", "Dal", "Rice", "Breads", "Waffle Hut"]
+const CATEGORIES = ["All", "Thali", "Chinese Combos", "Indian Combos", "Chauchak Chaap", "Tagda Tikka", "Chaap Specials", "Mazedaar Momo", "Raapchik Rolls", "Chinese", "Rice Bowls", "Desert", "Indian Gravy", "Dal", "Rice", "Breads", "Waffle Hut"]
 
 const CATEGORY_IMAGES = {
   'All': brandLogo,
@@ -299,7 +299,17 @@ function AppContent() {
   const dec = (key) => setQuantities(q => ({ ...q, [key]: Math.max(0, (q[key] || 0) - 1) }))
   const setQty = (key, val) => setQuantities(q => ({ ...q, [key]: Math.max(0, Number(val) || 0) }))
 
-  const visibleMenu = useMemo(() => MENU.filter(m => activeCat === 'All' || m.category === activeCat), [activeCat])
+  const visibleMenu = useMemo(() => {
+    const filtered = MENU.filter(m => activeCat === 'All' || m.category === activeCat)
+    if (activeCat === 'All') {
+      return [...filtered].sort((a, b) => {
+        if (a.category === 'Thali' && b.category !== 'Thali') return -1
+        if (a.category !== 'Thali' && b.category === 'Thali') return 1
+        return 0
+      })
+    }
+    return filtered
+  }, [activeCat])
 
   const orderLines = useMemo(() => {
     const lines = []

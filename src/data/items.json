@@ -432,6 +432,14 @@
     },
     {
       "id": 47,
+      "itemName": "Saadi Thali",
+      "category": "Thali",
+      "photoName": "SadiThaaliNew.jpeg",
+      "description": "",
+      "price": 90
+    },
+    {
+      "id": 48,
       "itemName": "Delux Thali",
       "category": "Thali",
       "photoName": "Delux Thaali.jpeg",
@@ -439,7 +447,7 @@
       "price": 120
     },
     {
-      "id": 48,
+      "id": 49,
       "itemName": "Premium Thali",
       "category": "Thali",
       "photoName": "Premium Thali.jpeg",
@@ -447,20 +455,12 @@
       "price": 140
     },
     {
-      "id": 49,
+      "id": 50,
       "itemName": "Bahubali Thali",
       "category": "Thali",
       "photoName": "Bahubali Thali.jpeg",
       "description": "",
       "price": 160
-    },
-    {
-      "id": 50,
-      "itemName": "Saadi Thali",
-      "category": "Thali",
-      "photoName": "Delux Thaali.jpeg",
-      "description": "",
-      "price": 90
     },
     {
       "id": 51,
