@@ -12,7 +12,7 @@
   "_priceHelp": "Two ways to price a dish: (1) Single price -> add ONLY a 'price' field. (2) Half & Full plate -> add ONLY 'priceHalf' and 'priceFull' fields (do NOT add 'price'). The app auto-detects which layout to show. This is the ONLY file you need to edit to add/change dishes.",
   "shopOpen": true,
   "operatingHours": {
-    "enabled": true,
+    "enabled": false,
     "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "openTime": "17:00",
     "closeTime": "23:59"
