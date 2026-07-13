@@ -740,7 +740,7 @@ function AppContent() {
           </section>
 
           <section className="promo-strip">
-            <div className="promo-card promo-green" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>
+            <div className="promo-card promo-green">
               <span className="promo-icon">🚚</span>
               <div className="promo-text">
                 <div className="promo-title">FREE DELIVERY</div>
