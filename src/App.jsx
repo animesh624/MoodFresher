@@ -47,6 +47,7 @@ const MENU = itemsData.items.map(item => ({
 
 const CONFIG = itemsData
 const SHOP_OPEN = CONFIG.shopOpen
+const MAX_DELIVERY_DISTANCE = CONFIG.maxDeliveryDistance || 8
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 const CATEGORIES = ['All', 'Chinese', 'Chaap Specials', 'Thali', 'Indian Gravy', 'Combos', 'Momos']
@@ -327,7 +328,8 @@ function AppContent() {
   const totalBeforeDiscount = subtotal + deliveryCharge
   const total = totalBeforeDiscount - discountAmount
 
-  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen && meetsMinOrder
+  const isDeliverable = deliveryDistance == null || deliveryDistance <= MAX_DELIVERY_DISTANCE
+  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen && meetsMinOrder && isDeliverable
 
   const scrollToOrderPanel = () => {
     if (orderPanelRef.current) {
@@ -339,6 +341,10 @@ function AppContent() {
     if (!canPlace) {
       if (!meetsMinOrder) {
         toast.error(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
+        return
+      }
+      if (!isDeliverable) {
+        toast.error(`Sorry for the inconvenience, we do not deliver beyond ${MAX_DELIVERY_DISTANCE} km.`)
         return
       }
       toast.error('Please enter name, address and select at least one item before placing the order.')
@@ -498,13 +504,13 @@ function AppContent() {
           </ul>
           <div className="summary-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
           {deliveryDistance != null && (
-            <div className="summary-row delivery">
+            <div className={`summary-row delivery ${!isDeliverable ? 'not-deliverable' : ''}`}>
               <span>
                 Delivery
                 <span className="delivery-distance">{deliveryDistance.toFixed(1)} km</span>
               </span>
-              <span className={deliveryCharge > 0 ? '' : 'free-delivery'}>
-                {deliveryCharge > 0 ? `₹${deliveryCharge}` : 'FREE'}
+              <span className={!isDeliverable ? 'not-deliverable-text' : (deliveryCharge > 0 ? '' : 'free-delivery')}>
+                {!isDeliverable ? 'Not Serviceable' : (deliveryCharge > 0 ? `₹${deliveryCharge}` : 'FREE')}
               </span>
             </div>
           )}
@@ -518,15 +524,20 @@ function AppContent() {
             </div>
           )}
           <div className="summary-row total"><span>Total</span><span>₹{total}</span></div>
-          {deliveryDistance != null && deliveryCharge > 0 && (
+          {deliveryDistance != null && deliveryCharge > 0 && isDeliverable && (
             <div className="delivery-note">
               🚗 {FREE_DELIVERY_KM} km free, then ₹{DELIVERY_CHARGE_PER_KM}/km extra.
               Beyond {FREE_DELIVERY_KM} km: {Math.round(deliveryDistance - FREE_DELIVERY_KM)} km
             </div>
           )}
-          {deliveryDistance != null && deliveryCharge === 0 && (
+          {deliveryDistance != null && deliveryCharge === 0 && isDeliverable && (
             <div className="delivery-note free">
               🚗 Free delivery within {FREE_DELIVERY_KM} km of our restaurant!
+            </div>
+          )}
+          {deliveryDistance != null && !isDeliverable && (
+            <div className="delivery-note error" style={{color: 'red', fontWeight: 'bold'}}>
+              🚫 Sorry for the inconvenience, we do not deliver beyond {MAX_DELIVERY_DISTANCE} km.
             </div>
           )}
         </div>
@@ -913,17 +924,30 @@ function AppContent() {
           </div>
         </footer>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar Container */}
         {view === 'menu' && cartCount > 0 && (
-          <div className="bottom-bar">
-            <div className="bottom-bar-left">
-              <span className="bottom-bar-count">{cartCount} item{cartCount > 1 ? 's' : ''}</span>
-              <span className="bottom-bar-total">₹{total}</span>
-              {discountAmount > 0 && <span className="bottom-bar-discount">saved ₹{discountAmount}</span>}
+          <div className="bottom-bar-container">
+            <div className="bottom-bar-promo">
+              {subtotal < MIN_ORDER_AMOUNT && (
+                <span>Add ₹{shortfallMin} more for min order</span>
+              )}
+              {subtotal >= MIN_ORDER_AMOUNT && nextTier && (
+                <span>Add ₹{shortfallNext} more for {nextTier.label}</span>
+              )}
+              {activeTier && !nextTier && (
+                <span>🏆 Max discount of {activeTier.label} unlocked!</span>
+              )}
             </div>
-            <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
-              View Cart →
-            </button>
+            <div className="bottom-bar">
+              <div className="bottom-bar-left">
+                <span className="bottom-bar-count">{cartCount} item{cartCount > 1 ? 's' : ''}</span>
+                <span className="bottom-bar-total">₹{total}</span>
+                {discountAmount > 0 && <span className="bottom-bar-discount">saved ₹{discountAmount}</span>}
+              </div>
+              <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
+                View Cart →
+              </button>
+            </div>
           </div>
         )}
       </div>
