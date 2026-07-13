@@ -7,11 +7,12 @@ import itemsData from './data/items.json'
 const WHATSAPP_NUMBER = '918736066574'
 
 // Restaurant location
-const RESTAURANT_LAT = 25.454273556578134
-const RESTAURANT_LNG = 81.84516284402
+const RESTAURANT_LAT = 25.454407962816024
+const RESTAURANT_LNG = 81.84513313772787
 
 const FREE_DELIVERY_KM = 3
 const DELIVERY_CHARGE_PER_KM = 10
+const ROAD_DISTANCE_MULTIPLIER = 1.4
 
 const MIN_ORDER_AMOUNT = 200
 
@@ -550,7 +551,7 @@ function AppContent() {
                 const lat = pos.coords.latitude
                 const lng = pos.coords.longitude
                 const dist = haversineDistance(RESTAURANT_LAT, RESTAURANT_LNG, lat, lng)
-                setDeliveryDistance(dist)
+                setDeliveryDistance(dist * ROAD_DISTANCE_MULTIPLIER)
                 setLocation(`https://maps.google.com/?q=${lat},${lng}`)
                 setLocating(false)
                 toast.success('Location shared successfully!')
