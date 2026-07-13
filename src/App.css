@@ -189,15 +189,15 @@
 
 /* ===== 13. CELEBRATION OVERLAY ===== */
 .celebration-overlay { position: absolute; bottom: 20px; left: 16px; right: 16px; z-index: 10; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; animation: toastSlideDown 0.4s ease; }
-.celebration-content { background: var(--bg-card); padding: 16px 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border-gold); box-shadow: 0 10px 40px rgba(212,162,76,0.3); max-width: 100%; animation: celebPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); pointer-events: auto; }
-.celebration-sparkles { font-size: 32px; margin-bottom: 12px; animation: sparkleFloat 2s infinite ease-in-out; }
-.celebration-title { font-family: var(--font-display); font-size: 24px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.celebration-sub { color: var(--text-primary); font-size: 14px; font-weight: 600; margin-bottom: 20px; }
-.celebration-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: var(--radius-full); margin-bottom: 20px; overflow: hidden; }
+.celebration-content { background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 16px; border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(212,162,76,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 100%; animation: celebPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); pointer-events: auto; }
+.celebration-sparkles { font-size: 20px; margin-bottom: 4px; animation: sparkleFloat 2s infinite ease-in-out; }
+.celebration-title { font-family: var(--font-display); font-size: 16px; font-weight: 800; margin-bottom: 4px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.celebration-sub { color: var(--text-primary); font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+.celebration-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: var(--radius-full); margin-bottom: 10px; overflow: hidden; }
 .celebration-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold)); background-size: 200% 100%; border-radius: var(--radius-full); animation: celebShimmer 2s infinite linear; }
-.celebration-upsell { margin-top: 16px; }
-.upsell-divider { height: 1px; background: var(--border-subtle); margin-bottom: 12px; }
-.upsell-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.celebration-upsell { margin-top: 10px; }
+.upsell-divider { height: 1px; background: var(--border-subtle); margin-bottom: 8px; }
+.upsell-text { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
 .upsell-text strong { color: var(--gold-light); }
 .upsell-text.max { color: var(--green); font-weight: 600; }
 
