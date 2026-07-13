@@ -189,7 +189,7 @@
 
 /* ===== 13. CELEBRATION OVERLAY ===== */
 .celebration-overlay { position: absolute; bottom: 40px; left: 16px; right: 16px; z-index: 10; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; animation: toastSlideDown 0.4s ease; }
-.celebration-content { background: rgba(20, 20, 25, 0.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 12px 16px; border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(212,162,76,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 100%; animation: celebPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); pointer-events: auto; }
+.celebration-content { width: 100%; max-width: 360px; background: rgba(20, 20, 25, 0.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 12px 16px; border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(212,162,76,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: celebPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); pointer-events: auto; }
 .celebration-sparkles { font-size: 20px; margin-bottom: 4px; animation: sparkleFloat 2s infinite ease-in-out; }
 .celebration-title { font-family: var(--font-display); font-size: 16px; font-weight: 800; margin-bottom: 4px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .celebration-sub { color: var(--text-primary); font-size: 12px; font-weight: 600; margin-bottom: 10px; }
