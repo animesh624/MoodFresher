@@ -23,7 +23,7 @@
   "shopOpen": true,
   "maxDeliveryDistance": 8,
   "operatingHours": {
-    "enabled": false,
+    "enabled": true,
     "days": [
       "Monday",
       "Tuesday",
