@@ -21,7 +21,7 @@
   "_categoryHelp": "Use any of the above categories for the 'category' field in items below. 'All' is reserved for filtering and should NOT be used as an item category.",
   "_priceHelp": "Two ways to price a dish: (1) Single price -> add ONLY a 'price' field. (2) Half & Full plate -> add ONLY 'priceHalf' and 'priceFull' fields (do NOT add 'price'). The app auto-detects which layout to show. This is the ONLY file you need to edit to add/change dishes.",
   "shopOpen": true,
-  "maxDeliveryDistance": 8,
+  "maxDeliveryDistance": 2,
   "operatingHours": {
     "enabled": false,
     "days": [
