@@ -341,7 +341,7 @@ function AppContent() {
   const total = totalBeforeDiscount - discountAmount
 
   const isDeliverable = deliveryDistance == null || deliveryDistance <= MAX_DELIVERY_DISTANCE
-  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen && meetsMinOrder && isDeliverable
+  const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && WHATSAPP_NUMBER && isOpen && meetsMinOrder && isDeliverable && location !== null
 
   const scrollToOrderPanel = () => {
     if (orderPanelRef.current) {
@@ -605,7 +605,7 @@ function AppContent() {
         }}
         disabled={false}
       >
-        {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : canPlace ? 'Place order' : 'Enter details to order'}
+        {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : canPlace ? '💬 Place order' : 'Enter details & location to order'}
       </button>
     </>
   )
@@ -725,8 +725,7 @@ function AppContent() {
                 <span className="hero-trust-item">🚗 Fast Delivery</span>
               </div>
               <div className="hero-actions">
-                <button className="hero-btn-primary" onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}>Order on WhatsApp</button>
-                <button className="hero-btn-secondary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore Menu</button>
+                <button className="hero-btn-primary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore Menu</button>
               </div>
             </div>
           </section>
