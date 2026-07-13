@@ -43,6 +43,7 @@ const MENU = itemsData.items.map(item => ({
   desc: item.description,
   img: photoMap[item.photoName],
   category: item.category,
+  subcategory: item.subcategory,
 }))
 
 const CONFIG = itemsData
@@ -50,16 +51,26 @@ const SHOP_OPEN = CONFIG.shopOpen
 const MAX_DELIVERY_DISTANCE = CONFIG.maxDeliveryDistance || 8
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-const CATEGORIES = ['All', 'Chinese', 'Chaap Specials', 'Thali', 'Indian Gravy', 'Combos', 'Momos']
+const CATEGORIES = ["All", "Chinese Combos", "Indian Combos", "Chauchak Chaap", "Tagda Tikka", "Chaap Specials", "Mazedaar Momo", "Raapchik Rolls", "Chinese", "Thali", "Rice Bowls", "Desert", "Indian Gravy", "Dal", "Rice", "Breads", "Waffle Hut"]
 
 const CATEGORY_IMAGES = {
   'All': brandLogo,
-  'Chinese': photoMap['Manchurian Fried Rice.jpeg'],
-  'Indian Gravy': photoMap['menu1.jpeg'],
-  'Chaap Specials': photoMap['Achaari Chaap.jpeg'],
+  'Chinese Combos': photoMap['Manchurian Fried Rice.jpeg'],
+  'Indian Combos': photoMap['Chaap Butter Msala RUmali Roti.jpeg'],
+  'Chauchak Chaap': photoMap['Achaari Chaap.jpeg'],
+  'Tagda Tikka': photoMap['Paneer Tikka.jpeg'],
+  'Chaap Specials': photoMap['SoyaChaap biryani.jpeg'],
+  'Mazedaar Momo': photoMap['steamed_momos.jpeg'],
+  'Raapchik Rolls': photoMap['spring_roll.jpeg'],
+  'Chinese': photoMap['Manchurian Noodles.jpeg'],
   'Thali': photoMap['Bahubali Thali.jpeg'],
-  'Combos': photoMap['Chaap Butter Msala RUmali Roti.jpeg'],
-  'Momos': photoMap['maggiemomos.jpeg'],
+  'Rice Bowls': photoMap['Paneer Butter Masala.jpeg'],
+  'Desert': photoMap['Oreo ka Maza Premium.jpeg'],
+  'Indian Gravy': photoMap['Paneer Butter Masala.jpeg'],
+  'Dal': photoMap['Paneer Butter Masala.jpeg'],
+  'Rice': photoMap['SoyaChaap biryani.jpeg'],
+  'Breads': photoMap['Chaap Butter Msala RUmali Roti.jpeg'],
+  'Waffle Hut': photoMap['Triple Chocolate Premium.jpeg']
 }
 
 const haversineDistance = (lat1, lng1, lat2, lng2) => {
@@ -256,6 +267,13 @@ function AppContent() {
   const [exploreMenu, setExploreMenu] = useState(false)
   const [celebratedTier, setCelebratedTier] = useState(null)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [expandedSubcats, setExpandedSubcats] = useState({
+    'Mini Waffle (Single Base)': true,
+    'Premium Chocolate (Double Base)': true,
+    'Chocolate Bowl': true,
+    'Classic Vanilla (Double Base)': true,
+    'Shakes': true
+  })
   const orderPanelRef = useRef(null)
   const catRowRef = useRef(null)
   const prevTierRef = useRef(null)
@@ -598,6 +616,72 @@ function AppContent() {
     </>
   )
 
+  const renderMenuGrid = (items) => (
+    <div className="menu-grid">
+      {items.map(item => (
+        <article className="menu-card" key={item.id}>
+          <div className="menu-card-img-wrapper">
+            <div className="food-img" style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+            <span className="veg-indicator">●</span>
+          </div>
+          <div className="menu-info">
+            <div>
+              <div className="menu-title">{item.name}</div>
+              <div className="menu-desc">{item.desc}</div>
+            </div>
+            {item.hasHalfFull ? (
+              <div className="menu-footer half-full-footer">
+                <div className="variant-row">
+                  <div className="variant-info">
+                    <span className="variant-label half-label">Half</span>
+                    <span className="variant-price">₹{item.priceHalf}</span>
+                  </div>
+                  {quantities[`${item.id}_half`] > 0 ? (
+                    <div className="qty-stepper">
+                      <button disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>−</button>
+                      <span className="qty-value">{quantities[`${item.id}_half`]}</span>
+                      <button disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
+                    </div>
+                  ) : (
+                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); toast.success(`Added ${item.name} (Half)`); }}>ADD</button>
+                  )}
+                </div>
+                <div className="variant-row">
+                  <div className="variant-info">
+                    <span className="variant-label full-label">Full</span>
+                    <span className="variant-price">₹{item.priceFull}</span>
+                  </div>
+                  {quantities[`${item.id}_full`] > 0 ? (
+                    <div className="qty-stepper">
+                      <button disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>−</button>
+                      <span className="qty-value">{quantities[`${item.id}_full`]}</span>
+                      <button disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
+                    </div>
+                  ) : (
+                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); toast.success(`Added ${item.name} (Full)`); }}>ADD</button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="menu-footer">
+                <div className="price">₹{item.price}</div>
+                {quantities[item.id] > 0 ? (
+                  <div className="qty-stepper">
+                    <button disabled={!isOpen} onClick={() => dec(`${item.id}`)}>−</button>
+                    <span className="qty-value">{quantities[item.id]}</span>
+                    <button disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
+                  </div>
+                ) : (
+                  <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); toast.success(`Added ${item.name}`); }}>ADD</button>
+                )}
+              </div>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+
   return (
     <div className="app-root">
       <header className="topbar">
@@ -721,69 +805,26 @@ function AppContent() {
         {view === 'menu' ? (
           <main className="content">
             <section className="menu-section">
-              <div className="menu-grid">
-                {visibleMenu.map(item => (
-                  <article className="menu-card" key={item.id}>
-                    <div className="menu-card-img-wrapper">
-                      <div className="food-img" style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-                      <span className="veg-indicator">●</span>
-                    </div>
-                    <div className="menu-info">
-                      <div>
-                        <div className="menu-title">{item.name}</div>
-                        <div className="menu-desc">{item.desc}</div>
+              {activeCat === 'Waffle Hut' ? (
+                <div className="waffle-hut-container">
+                  {[...new Set(visibleMenu.map(item => item.subcategory))].map(subcat => {
+                    if (!subcat) return null
+                    const isExpanded = expandedSubcats[subcat]
+                    const items = visibleMenu.filter(item => item.subcategory === subcat)
+                    return (
+                      <div className="subcategory-section" key={subcat}>
+                        <button className="subcategory-header" onClick={() => setExpandedSubcats(prev => ({...prev, [subcat]: !prev[subcat]}))}>
+                          <h3>{subcat}</h3>
+                          <span className={`chevron ${isExpanded ? 'open' : ''}`}>▼</span>
+                        </button>
+                        {isExpanded && renderMenuGrid(items)}
                       </div>
-                      {item.hasHalfFull ? (
-                        <div className="menu-footer half-full-footer">
-                          <div className="variant-row">
-                            <div className="variant-info">
-                              <span className="variant-label half-label">Half</span>
-                              <span className="variant-price">₹{item.priceHalf}</span>
-                            </div>
-                            {quantities[`${item.id}_half`] > 0 ? (
-                              <div className="qty-stepper">
-                                <button disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>−</button>
-                                <span className="qty-value">{quantities[`${item.id}_half`]}</span>
-                                <button disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
-                              </div>
-                            ) : (
-                              <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); toast.success(`Added ${item.name} (Half)`); }}>ADD</button>
-                            )}
-                          </div>
-                          <div className="variant-row">
-                            <div className="variant-info">
-                              <span className="variant-label full-label">Full</span>
-                              <span className="variant-price">₹{item.priceFull}</span>
-                            </div>
-                            {quantities[`${item.id}_full`] > 0 ? (
-                              <div className="qty-stepper">
-                                <button disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>−</button>
-                                <span className="qty-value">{quantities[`${item.id}_full`]}</span>
-                                <button disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
-                              </div>
-                            ) : (
-                              <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); toast.success(`Added ${item.name} (Full)`); }}>ADD</button>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="menu-footer">
-                          <div className="price">₹{item.price}</div>
-                          {quantities[item.id] > 0 ? (
-                            <div className="qty-stepper">
-                              <button disabled={!isOpen} onClick={() => dec(`${item.id}`)}>−</button>
-                              <span className="qty-value">{quantities[item.id]}</span>
-                              <button disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
-                            </div>
-                          ) : (
-                            <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); toast.success(`Added ${item.name}`); }}>ADD</button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                renderMenuGrid(visibleMenu)
+              )}
             </section>
 
             <aside className="order-panel" ref={orderPanelRef}>
