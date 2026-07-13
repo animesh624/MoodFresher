@@ -24,7 +24,7 @@
   box-shadow: 0 4px 30px rgba(0,0,0,0.4);
 }
 .topbar .brand { justify-self: start; display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
-.brand-logo { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; filter: invert(1) hue-rotate(180deg) brightness(1.2); mix-blend-mode: screen; }
+.brand-logo { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; border-radius: 50%; overflow: hidden; }
 .brand-text { display: flex; flex-direction: column; gap: 2px; }
 .topbar .logo { font-family: var(--font-display); font-weight: 800; font-size: 17px; line-height: 1.15; background: linear-gradient(135deg, var(--gold), var(--gold-light), var(--gold)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.5px; }
 .topbar .tag { font-size: 10px; color: var(--text-muted); font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
@@ -278,7 +278,7 @@
 .footer-col { display: flex; flex-direction: column; gap: 12px; }
 .footer-col-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-primary); margin-bottom: 4px; }
 .footer-brand { display: flex; align-items: center; gap: 12px; }
-.footer-logo { width: 50px; height: 50px; object-fit: contain; filter: invert(1) hue-rotate(180deg) brightness(1.2); mix-blend-mode: screen; }
+.footer-logo { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; overflow: hidden; }
 .footer-brand-name { font-family: var(--font-display); font-weight: 800; font-size: 18px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .footer-brand-tag { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
 .footer-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
@@ -389,7 +389,7 @@ a.contact-value { color: var(--gold); font-weight: 600; }
   .footer-grid { grid-template-columns: 1fr; gap: 28px; }
   .trust-strip { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .footer-content { padding: 32px 16px 0; }
-  .toast-container { bottom: 80px; right: 12px; left: 12px; }
+  .toast-container { bottom: auto; width: calc(100% - 24px); left: 50%; transform: translateX(-50%); }
   .toast { min-width: auto; max-width: none; }
   .about-grid { grid-template-columns: 1fr; }
   .about-section h3 { font-size: 26px; }
