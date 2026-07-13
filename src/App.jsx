@@ -55,6 +55,7 @@ const CATEGORIES = ["All", "Thali", "Chinese Combos", "Indian Combos", "Chauchak
 
 const CATEGORY_IMAGES = {
   'All': brandLogo,
+  'Thali': photoMap['Bahubali Thali.jpeg'],
   'Chinese Combos': photoMap['Manchurian Fried Rice.jpeg'],
   'Indian Combos': photoMap['Chaap Butter Msala RUmali Roti.jpeg'],
   'Chauchak Chaap': photoMap['Achaari Chaap.jpeg'],
@@ -63,12 +64,11 @@ const CATEGORY_IMAGES = {
   'Mazedaar Momo': photoMap['steamed_momos.jpeg'],
   'Raapchik Rolls': photoMap['spring_roll.jpeg'],
   'Chinese': photoMap['Manchurian Noodles.jpeg'],
-  'Thali': photoMap['Bahubali Thali.jpeg'],
-  'Rice Bowls': photoMap['Paneer Butter Masala.jpeg'],
-  'Desert': photoMap['Oreo ka Maza Premium.jpeg'],
+  'Rice Bowls': photoMap['Dal Rice Bowl.jpeg'],
+  'Desert': photoMap['Gulab Jamun.jpeg'],
   'Indian Gravy': photoMap['Paneer Butter Masala.jpeg'],
-  'Dal': photoMap['Paneer Butter Masala.jpeg'],
-  'Rice': photoMap['SoyaChaap biryani.jpeg'],
+  'Dal': photoMap['Dal Tadka.jpeg'],
+  'Rice': photoMap['Jeera Rice.jpeg'],
   'Breads': photoMap['Chaap Butter Msala RUmali Roti.jpeg'],
   'Waffle Hut': photoMap['Triple Chocolate Premium.jpeg']
 }

@@ -23,7 +23,7 @@
   "shopOpen": true,
   "maxDeliveryDistance": 8,
   "operatingHours": {
-    "enabled": true,
+    "enabled": false,
     "days": [
       "Monday",
       "Tuesday",
@@ -49,7 +49,7 @@
       "id": 2,
       "itemName": "Chilli Paneer + Paneer Fried Rice",
       "category": "Chinese Combos",
-      "photoName": "Manchurian Fried Rice.jpeg",
+      "photoName": "CHilli Paneer Fried Rice.jpeg",
       "description": "",
       "price": 140
     },
@@ -137,7 +137,7 @@
       "id": 13,
       "itemName": "Masala Chaap",
       "category": "Chauchak Chaap",
-      "photoName": "menu1.jpeg",
+      "photoName": "Masala Chaap.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -173,7 +173,7 @@
       "id": 17,
       "itemName": "Haryali Chaap",
       "category": "Chauchak Chaap",
-      "photoName": "menu1.jpeg",
+      "photoName": "Haryali Chaap.jpeg",
       "description": "",
       "priceHalf": 100,
       "priceFull": 180
@@ -236,7 +236,7 @@
       "id": 24,
       "itemName": "Fried Momos",
       "category": "Mazedaar Momo",
-      "photoName": "steamed_momos.jpeg",
+      "photoName": "Fried Momos.jpeg",
       "description": "",
       "priceHalf": 55,
       "priceFull": 110
@@ -245,7 +245,7 @@
       "id": 25,
       "itemName": "Tandoori Masala Momos",
       "category": "Mazedaar Momo",
-      "photoName": "steamed_momos.jpeg",
+      "photoName": "Tandoori Momos.jpeg",
       "description": "",
       "priceHalf": 70,
       "priceFull": 120
@@ -254,7 +254,7 @@
       "id": 26,
       "itemName": "Tandoori Malai Momos",
       "category": "Mazedaar Momo",
-      "photoName": "steamed_momos.jpeg",
+      "photoName": "Tandoori Momos.jpeg",
       "description": "",
       "priceHalf": 80,
       "priceFull": 140
@@ -381,7 +381,7 @@
       "id": 41,
       "itemName": "Chilli Paneer",
       "category": "Chinese",
-      "photoName": "Manchurian Fried Rice.jpeg",
+      "photoName": "CHilli Paneer Fried Rice.jpeg",
       "description": "",
       "priceHalf": 120,
       "priceFull": 220
@@ -417,7 +417,7 @@
       "id": 45,
       "itemName": "Pav Bhaji",
       "category": "Chinese",
-      "photoName": "Bahubali Thali.jpeg",
+      "photoName": "Pav Bhaji.jpeg",
       "description": "",
       "price": 80
     },
@@ -466,7 +466,7 @@
       "id": 51,
       "itemName": "Daal + Rice",
       "category": "Rice Bowls",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Dal Rice Bowl.jpeg",
       "description": "",
       "price": 60
     },
@@ -474,7 +474,7 @@
       "id": 52,
       "itemName": "Chola + Rice",
       "category": "Rice Bowls",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Chola Rice Bowl.jpeg",
       "description": "",
       "price": 70
     },
@@ -490,7 +490,7 @@
       "id": 54,
       "itemName": "Matar Paneer + Rice",
       "category": "Rice Bowls",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Matar Paneer Rice.jpeg",
       "description": "",
       "price": 80
     },
@@ -498,7 +498,7 @@
       "id": 55,
       "itemName": "Gulab Jamun",
       "category": "Desert",
-      "photoName": "Oreo ka Maza Premium.jpeg",
+      "photoName": "Gulab Jamun.jpeg",
       "description": "",
       "price": 25
     },
@@ -515,7 +515,7 @@
       "id": 57,
       "itemName": "Paneer Do Pyaaza",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Kadai Paneer.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -524,7 +524,7 @@
       "id": 58,
       "itemName": "Paneer Korma",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Shahi Paneer.jpeg",
       "description": "",
       "priceHalf": 150,
       "priceFull": 290
@@ -533,7 +533,7 @@
       "id": 59,
       "itemName": "Shahi Paneer",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Shahi Paneer.jpeg",
       "description": "",
       "priceHalf": 150,
       "priceFull": 290
@@ -542,7 +542,7 @@
       "id": 60,
       "itemName": "Kadai Paneer",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Kadai Paneer.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -560,7 +560,7 @@
       "id": 62,
       "itemName": "Matar Paneer",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Matar Paneer Rice.jpeg",
       "description": "",
       "priceHalf": 130,
       "priceFull": 220
@@ -569,7 +569,7 @@
       "id": 63,
       "itemName": "Jeera Aloo",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Jeera Aloo.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -578,7 +578,7 @@
       "id": 64,
       "itemName": "Seasonal Veg",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Seasonal Veg.jpeg",
       "description": "",
       "priceHalf": 110,
       "priceFull": 200
@@ -587,7 +587,7 @@
       "id": 65,
       "itemName": "Chaap Butter Masala",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Chaap Gravy.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -596,7 +596,7 @@
       "id": 66,
       "itemName": "Handi Chaap",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Chaap Gravy.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -605,7 +605,7 @@
       "id": 67,
       "itemName": "Kadhai Caap",
       "category": "Indian Gravy",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Chaap Gravy.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -614,7 +614,7 @@
       "id": 68,
       "itemName": "Dal Arhar Tadka",
       "category": "Dal",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Dal Tadka.jpeg",
       "description": "",
       "price": 120
     },
@@ -622,7 +622,7 @@
       "id": 69,
       "itemName": "Dal Arhar Fry",
       "category": "Dal",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Dal Tadka.jpeg",
       "description": "",
       "price": 140
     },
@@ -630,7 +630,7 @@
       "id": 70,
       "itemName": "Punjabi Choley",
       "category": "Dal",
-      "photoName": "Paneer Butter Masala.jpeg",
+      "photoName": "Punjabi Chole.jpeg",
       "description": "",
       "price": 110
     },
@@ -638,7 +638,7 @@
       "id": 71,
       "itemName": "Plain Rice",
       "category": "Rice",
-      "photoName": "SoyaChaap biryani.jpeg",
+      "photoName": "Jeera Rice.jpeg",
       "description": "",
       "priceHalf": 50,
       "priceFull": 90
@@ -647,7 +647,7 @@
       "id": 72,
       "itemName": "Jeera Rice",
       "category": "Rice",
-      "photoName": "SoyaChaap biryani.jpeg",
+      "photoName": "Jeera Rice.jpeg",
       "description": "",
       "priceHalf": 60,
       "priceFull": 100
@@ -1123,6 +1123,105 @@
       "description": "",
       "subcategory": "Shakes",
       "price": 130
+    },
+    {
+      "id": 127,
+      "itemName": "Death By Chocolate",
+      "category": "Waffle Hut",
+      "photoName": "Dark Chocolate Classic.jpeg",
+      "description": "",
+      "subcategory": "Cakes",
+      "price": 220
+    },
+    {
+      "id": 128,
+      "itemName": "Happy Valley",
+      "category": "Waffle Hut",
+      "photoName": "Triple Chocolate Premium.jpeg",
+      "description": "",
+      "subcategory": "Cakes",
+      "price": 260
+    },
+    {
+      "id": 129,
+      "itemName": "Almond Brownie Cake",
+      "category": "Waffle Hut",
+      "photoName": "Almond Brownie.jpeg",
+      "description": "",
+      "subcategory": "Cakes",
+      "price": 260
+    },
+    {
+      "id": 130,
+      "itemName": "Walnut Brownie Cake",
+      "category": "Waffle Hut",
+      "photoName": "Almond Brownie.jpeg",
+      "description": "",
+      "subcategory": "Cakes",
+      "price": 260
+    },
+    {
+      "id": 131,
+      "itemName": "Ice Cream",
+      "category": "Waffle Hut",
+      "photoName": "Milk Chocolate Classic.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 30
+    },
+    {
+      "id": 132,
+      "itemName": "Sprinkles",
+      "category": "Waffle Hut",
+      "photoName": "Milk Chocolate Classic.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 10
+    },
+    {
+      "id": 133,
+      "itemName": "Chocochips",
+      "category": "Waffle Hut",
+      "photoName": "Dark Chocolate Classic.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 10
+    },
+    {
+      "id": 134,
+      "itemName": "Crushed Oreo",
+      "category": "Waffle Hut",
+      "photoName": "Oreo ka Maza Premium.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 10
+    },
+    {
+      "id": 135,
+      "itemName": "Kit Kat",
+      "category": "Waffle Hut",
+      "photoName": "Kit Kat Kick.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 20
+    },
+    {
+      "id": 136,
+      "itemName": "Almonds",
+      "category": "Waffle Hut",
+      "photoName": "Almond Brownie.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 20
+    },
+    {
+      "id": 137,
+      "itemName": "Walnuts",
+      "category": "Waffle Hut",
+      "photoName": "Almond Brownie.jpeg",
+      "description": "",
+      "subcategory": "Add-Ons",
+      "price": 20
     }
   ]
 }
