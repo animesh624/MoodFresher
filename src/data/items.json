@@ -41,7 +41,7 @@
       "id": 1,
       "itemName": "Veg Chowmein + Veg Fried Rice + Veg Manchurian + Spring Roll",
       "category": "Chinese Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "price": 160
     },
@@ -49,7 +49,7 @@
       "id": 2,
       "itemName": "Chilli Paneer + Paneer Fried Rice",
       "category": "Chinese Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "price": 140
     },
@@ -57,7 +57,7 @@
       "id": 3,
       "itemName": "Chilli Paneer + Paneer Chowmein",
       "category": "Chinese Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Noodles.jpeg",
       "description": "",
       "price": 140
     },
@@ -65,7 +65,7 @@
       "id": 4,
       "itemName": "Veg Manchurian + Fried Rice",
       "category": "Chinese Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "price": 120
     },
@@ -73,7 +73,7 @@
       "id": 5,
       "itemName": "Veg Manchurian + Veg Chowmein",
       "category": "Chinese Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Noodles.jpeg",
       "description": "",
       "price": 120
     },
@@ -81,7 +81,7 @@
       "id": 6,
       "itemName": "Veg paneer Chowmein + Veg Paneer + Fried Rice + Chilli Paneer + Spring Roll",
       "category": "Chinese Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "price": 200
     },
@@ -89,7 +89,7 @@
       "id": 7,
       "itemName": "Chaap Butter Masala / Handi Chaap + 2 Rumali Roti",
       "category": "Indian Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 100
     },
@@ -97,7 +97,7 @@
       "id": 8,
       "itemName": "Chaap Butter Masala / Handi Chaap + 2 Rumali Roti + Chaap Biryani",
       "category": "Indian Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 130
     },
@@ -105,7 +105,7 @@
       "id": 9,
       "itemName": "Chola Kulcha Combo: Chola + Aaloo Kulcha",
       "category": "Indian Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 90
     },
@@ -113,7 +113,7 @@
       "id": 10,
       "itemName": "Chola Kulcha Combo: Chola + Paneer Kulcha",
       "category": "Indian Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 110
     },
@@ -121,7 +121,7 @@
       "id": 11,
       "itemName": "Paneer Butter Masala / Handi Paneer + 2 Tandoori Butter Roti",
       "category": "Indian Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 100
     },
@@ -129,7 +129,7 @@
       "id": 12,
       "itemName": "Paneer Butter Masala / Handi Paneer + 2 laccha Paratha / 1 Butter Naan",
       "category": "Indian Combos",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 120
     },
@@ -191,7 +191,7 @@
       "id": 19,
       "itemName": "Paneer Masala Tikka",
       "category": "Tagda Tikka",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Tikka.jpeg",
       "description": "",
       "priceHalf": 130,
       "priceFull": 210
@@ -200,7 +200,7 @@
       "id": 20,
       "itemName": "Paneer Malai Tikka",
       "category": "Tagda Tikka",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Tikka.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 240
@@ -209,7 +209,7 @@
       "id": 21,
       "itemName": "Paneer Haryali Tikka",
       "category": "Tagda Tikka",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Tikka.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 240
@@ -236,7 +236,7 @@
       "id": 24,
       "itemName": "Fried Momos",
       "category": "Mazedaar Momo",
-      "photoName": "menu1.jpeg",
+      "photoName": "steamed_momos.jpeg",
       "description": "",
       "priceHalf": 55,
       "priceFull": 110
@@ -245,7 +245,7 @@
       "id": 25,
       "itemName": "Tandoori Masala Momos",
       "category": "Mazedaar Momo",
-      "photoName": "menu1.jpeg",
+      "photoName": "steamed_momos.jpeg",
       "description": "",
       "priceHalf": 70,
       "priceFull": 120
@@ -254,7 +254,7 @@
       "id": 26,
       "itemName": "Tandoori Malai Momos",
       "category": "Mazedaar Momo",
-      "photoName": "menu1.jpeg",
+      "photoName": "steamed_momos.jpeg",
       "description": "",
       "priceHalf": 80,
       "priceFull": 140
@@ -271,7 +271,7 @@
       "id": 28,
       "itemName": "Masala Chaap Roll",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 90
     },
@@ -279,7 +279,7 @@
       "id": 29,
       "itemName": "Achari Chaap Roll",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 90
     },
@@ -287,7 +287,7 @@
       "id": 30,
       "itemName": "Malai Chaap Roll",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 100
     },
@@ -295,7 +295,7 @@
       "id": 31,
       "itemName": "Afghani Chaap Roll",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 100
     },
@@ -303,7 +303,7 @@
       "id": 32,
       "itemName": "Haryali Chaap Roll",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 100
     },
@@ -311,7 +311,7 @@
       "id": 33,
       "itemName": "Paneer Tikka Roll",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 110
     },
@@ -319,7 +319,7 @@
       "id": 34,
       "itemName": "Special Roll (Chaap + Paneer)",
       "category": "Raapchik Rolls",
-      "photoName": "menu1.jpeg",
+      "photoName": "spring_roll.jpeg",
       "description": "",
       "price": 120
     },
@@ -336,7 +336,7 @@
       "id": 36,
       "itemName": "Paneer Chowmein",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Noodles.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -345,7 +345,7 @@
       "id": 37,
       "itemName": "Schezwan Chowmein",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Noodles.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -354,7 +354,7 @@
       "id": 38,
       "itemName": "Veg Fried Rice",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "priceHalf": 70,
       "priceFull": 120
@@ -363,7 +363,7 @@
       "id": 39,
       "itemName": "Paneer Fried Rice",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -372,7 +372,7 @@
       "id": 40,
       "itemName": "Schezwan Fried Rice",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -381,7 +381,7 @@
       "id": 41,
       "itemName": "Chilli Paneer",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "priceHalf": 120,
       "priceFull": 220
@@ -399,7 +399,7 @@
       "id": 43,
       "itemName": "Paneer Manchurian",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "priceHalf": 120,
       "priceFull": 220
@@ -408,7 +408,7 @@
       "id": 44,
       "itemName": "Chilli Potato",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Noodles.jpeg",
       "description": "",
       "priceHalf": 80,
       "priceFull": 140
@@ -417,7 +417,7 @@
       "id": 45,
       "itemName": "Pav Bhaji",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Bahubali Thali.jpeg",
       "description": "",
       "price": 80
     },
@@ -425,7 +425,7 @@
       "id": 46,
       "itemName": "Dry Chilli Chaap",
       "category": "Chinese",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Noodles.jpeg",
       "description": "",
       "priceHalf": 100,
       "priceFull": 180
@@ -458,7 +458,7 @@
       "id": 50,
       "itemName": "Saadi Thali",
       "category": "Thali",
-      "photoName": "menu1.jpeg",
+      "photoName": "Delux Thaali.jpeg",
       "description": "",
       "price": 90
     },
@@ -466,7 +466,7 @@
       "id": 51,
       "itemName": "Daal + Rice",
       "category": "Rice Bowls",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 60
     },
@@ -474,7 +474,7 @@
       "id": 52,
       "itemName": "Chola + Rice",
       "category": "Rice Bowls",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 70
     },
@@ -482,7 +482,7 @@
       "id": 53,
       "itemName": "Paneer Butter Masala + Rice",
       "category": "Rice Bowls",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 80
     },
@@ -490,7 +490,7 @@
       "id": 54,
       "itemName": "Matar Paneer + Rice",
       "category": "Rice Bowls",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 80
     },
@@ -498,7 +498,7 @@
       "id": 55,
       "itemName": "Gulab Jamun",
       "category": "Desert",
-      "photoName": "menu1.jpeg",
+      "photoName": "Oreo ka Maza Premium.jpeg",
       "description": "",
       "price": 25
     },
@@ -515,7 +515,7 @@
       "id": 57,
       "itemName": "Paneer Do Pyaaza",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -524,7 +524,7 @@
       "id": 58,
       "itemName": "Paneer Korma",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 150,
       "priceFull": 290
@@ -533,7 +533,7 @@
       "id": 59,
       "itemName": "Shahi Paneer",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 150,
       "priceFull": 290
@@ -542,7 +542,7 @@
       "id": 60,
       "itemName": "Kadai Paneer",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -551,7 +551,7 @@
       "id": 61,
       "itemName": "Handi Paneer",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -560,7 +560,7 @@
       "id": 62,
       "itemName": "Matar Paneer",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 130,
       "priceFull": 220
@@ -569,7 +569,7 @@
       "id": 63,
       "itemName": "Jeera Aloo",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 90,
       "priceFull": 160
@@ -578,7 +578,7 @@
       "id": 64,
       "itemName": "Seasonal Veg",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 110,
       "priceFull": 200
@@ -587,7 +587,7 @@
       "id": 65,
       "itemName": "Chaap Butter Masala",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -596,7 +596,7 @@
       "id": 66,
       "itemName": "Handi Chaap",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -605,7 +605,7 @@
       "id": 67,
       "itemName": "Kadhai Caap",
       "category": "Indian Gravy",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "priceHalf": 140,
       "priceFull": 270
@@ -614,7 +614,7 @@
       "id": 68,
       "itemName": "Dal Arhar Tadka",
       "category": "Dal",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 120
     },
@@ -622,7 +622,7 @@
       "id": 69,
       "itemName": "Dal Arhar Fry",
       "category": "Dal",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 140
     },
@@ -630,7 +630,7 @@
       "id": 70,
       "itemName": "Punjabi Choley",
       "category": "Dal",
-      "photoName": "menu1.jpeg",
+      "photoName": "Paneer Butter Masala.jpeg",
       "description": "",
       "price": 110
     },
@@ -638,7 +638,7 @@
       "id": 71,
       "itemName": "Plain Rice",
       "category": "Rice",
-      "photoName": "menu1.jpeg",
+      "photoName": "SoyaChaap biryani.jpeg",
       "description": "",
       "priceHalf": 50,
       "priceFull": 90
@@ -647,7 +647,7 @@
       "id": 72,
       "itemName": "Jeera Rice",
       "category": "Rice",
-      "photoName": "menu1.jpeg",
+      "photoName": "SoyaChaap biryani.jpeg",
       "description": "",
       "priceHalf": 60,
       "priceFull": 100
@@ -656,7 +656,7 @@
       "id": 73,
       "itemName": "Veg Fried Rice (Rice Category)",
       "category": "Rice",
-      "photoName": "menu1.jpeg",
+      "photoName": "Manchurian Fried Rice.jpeg",
       "description": "",
       "priceHalf": 70,
       "priceFull": 120
@@ -665,7 +665,7 @@
       "id": 74,
       "itemName": "Rumali Roti",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 15
     },
@@ -673,7 +673,7 @@
       "id": 75,
       "itemName": "Tandoori Roti",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 15
     },
@@ -681,7 +681,7 @@
       "id": 76,
       "itemName": "Tandoori Butter Roti",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 20
     },
@@ -689,7 +689,7 @@
       "id": 77,
       "itemName": "Tava Roti",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 10
     },
@@ -697,7 +697,7 @@
       "id": 78,
       "itemName": "Tava Butter Roti",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 15
     },
@@ -705,7 +705,7 @@
       "id": 79,
       "itemName": "Butter Missi Roti",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 35
     },
@@ -713,7 +713,7 @@
       "id": 80,
       "itemName": "Tandoori Lachcha Paraatha",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 35
     },
@@ -721,7 +721,7 @@
       "id": 81,
       "itemName": "Paneer Kulcha",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 70
     },
@@ -729,7 +729,7 @@
       "id": 82,
       "itemName": "Onion Kulcha",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 50
     },
@@ -737,7 +737,7 @@
       "id": 83,
       "itemName": "Stuffed Kulcha",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 60
     },
@@ -745,7 +745,7 @@
       "id": 84,
       "itemName": "Baby Naan",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 30
     },
@@ -753,7 +753,7 @@
       "id": 85,
       "itemName": "Butter Naan",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 50
     },
@@ -761,7 +761,7 @@
       "id": 86,
       "itemName": "Garlic Naan",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 60
     },
@@ -769,7 +769,7 @@
       "id": 87,
       "itemName": "Stuffed Naan",
       "category": "Breads",
-      "photoName": "menu1.jpeg",
+      "photoName": "Chaap Butter Msala RUmali Roti.jpeg",
       "description": "",
       "price": 70
     },

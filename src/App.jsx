@@ -267,13 +267,7 @@ function AppContent() {
   const [exploreMenu, setExploreMenu] = useState(false)
   const [celebratedTier, setCelebratedTier] = useState(null)
   const [showCelebration, setShowCelebration] = useState(false)
-  const [expandedSubcats, setExpandedSubcats] = useState({
-    'Mini Waffle (Single Base)': true,
-    'Premium Chocolate (Double Base)': true,
-    'Chocolate Bowl': true,
-    'Classic Vanilla (Double Base)': true,
-    'Shakes': true
-  })
+  const [expandedSubcats, setExpandedSubcats] = useState({})
   const orderPanelRef = useRef(null)
   const catRowRef = useRef(null)
   const prevTierRef = useRef(null)
