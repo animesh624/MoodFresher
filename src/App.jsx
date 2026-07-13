@@ -215,7 +215,7 @@ function ToastProvider({ children }) {
   const addToast = useCallback((type, message) => {
     const id = ++toastIdRef.current
     setToasts(prev => [...prev.slice(-2), { id, type, message }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2000)
   }, [])
   const contextValue = useMemo(() => ({
     success: (msg) => addToast('success', msg),
