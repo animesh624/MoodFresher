@@ -547,11 +547,6 @@ function AppContent() {
               🚗 Free delivery within {FREE_DELIVERY_KM} km of our restaurant!
             </div>
           )}
-          {deliveryDistance != null && !isDeliverable && (
-            <div className="delivery-note error" style={{color: 'red', fontWeight: 'bold'}}>
-              🚫 Sorry for the inconvenience, we do not deliver beyond {MAX_DELIVERY_DISTANCE} km.
-            </div>
-          )}
         </div>
       )}
 
@@ -593,10 +588,17 @@ function AppContent() {
       </div>
 
       {/* Place order button */}
+      {deliveryDistance != null && !isDeliverable && (
+        <div className="delivery-note error" style={{color: 'red', fontWeight: 'bold', marginBottom: 12, textAlign: 'center'}}>
+          🚫 Sorry for the inconvenience, we do not deliver beyond {MAX_DELIVERY_DISTANCE} km.
+        </div>
+      )}
       <button
         className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`}
         onClick={canPlace ? placeOrder : () => {
-          if (!meetsMinOrder) {
+          if (deliveryDistance != null && !isDeliverable) {
+            toast.error(`Sorry for the inconvenience, we do not deliver beyond ${MAX_DELIVERY_DISTANCE} km.`)
+          } else if (!meetsMinOrder) {
             toast.error(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add items worth ₹${shortfallMin} more.`)
             scrollToOrderPanel()
           } else {
@@ -605,7 +607,7 @@ function AppContent() {
         }}
         disabled={false}
       >
-        {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : canPlace ? '💬 Place order' : 'Enter details & location to order'}
+        {!meetsMinOrder ? `Min ₹${MIN_ORDER_AMOUNT} order` : (deliveryDistance != null && !isDeliverable) ? '🚫 Out of Delivery Range' : canPlace ? '💬 Place order' : 'Enter details & location to order'}
       </button>
     </>
   )
