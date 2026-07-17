@@ -229,6 +229,16 @@ function AppContent() {
     }
     return 'menu'
   })
+  // Captured BEFORE any effect cleans the URL: was this an admin deep-link?
+  const isAdminDeepLinkRef = useRef(null)
+  if (isAdminDeepLinkRef.current === null) {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      isAdminDeepLinkRef.current = !!(params.get('admin_order') && localStorage.getItem('adminToken'))
+    } catch (e) {
+      isAdminDeepLinkRef.current = false
+    }
+  }
   const [exploreMenu, setExploreMenu] = useState(false)
   const [celebratedTier, setCelebratedTier] = useState(null)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -619,12 +629,17 @@ function AppContent() {
   }
 
   useEffect(() => {
-    const p = window.location.pathname.replace(/\/$/, '')
-    if (p === '' || p === '/') setView('menu')
-    else if (p.includes('contact')) setView('contact')
-    else if (p.includes('about')) setView('about')
-    else if (p.includes('admin')) setView('admin')
-    else setView('menu')
+    // Skip initial path->view sync for admin deep-links: the deep-link effect
+    // already set view='admin' and cleaned the URL to '/', so reading the path
+    // here would wrongly reset the view back to 'menu'.
+    if (!isAdminDeepLinkRef.current) {
+      const p = window.location.pathname.replace(/\/$/, '')
+      if (p === '' || p === '/') setView('menu')
+      else if (p.includes('contact')) setView('contact')
+      else if (p.includes('about')) setView('about')
+      else if (p.includes('admin')) setView('admin')
+      else setView('menu')
+    }
 
     const onPop = (e) => {
       const state = (e.state && e.state.view) || window.location.pathname.replace(/\/$/, '')
