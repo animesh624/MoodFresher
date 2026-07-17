@@ -261,13 +261,127 @@
 .toast-msg { font-size: 14px; font-weight: 500; color: var(--text-primary); flex: 1; }
 
 /* ===== 19. SHOP CLOSED OVERLAY ===== */
-.shop-closed-overlay { position: fixed; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 20px; pointer-events: auto; animation: fadeIn 0.4s ease; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-.shop-closed-card { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-xl); padding: 44px 36px; max-width: 480px; width: 100%; text-align: center; box-shadow: var(--shadow-xl), 0 0 80px rgba(0,0,0,0.5); animation: fadeInUp 0.5s ease; position: relative; }
-.shop-closed-card .closed-icon { font-size: 52px; display: block; margin-bottom: 16px; }
-.shop-closed-card h2 { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--text-primary); margin-bottom: 12px; }
-.shop-closed-card p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
-.closed-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.closed-actions .wa-btn, .closed-actions .primary, .closed-actions .secondary { font-size: 14px; padding: 12px 24px; }
+.shop-closed-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: auto;
+  animation: fadeIn 0.4s ease;
+  background: rgba(5, 5, 10, 0.82);
+  backdrop-filter: blur(12px) saturate(160%);
+}
+
+.shop-closed-card {
+  background: linear-gradient(135deg, rgba(20, 20, 30, 0.85) 0%, rgba(10, 10, 15, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.8), 0 0 50px rgba(212, 162, 76, 0.08);
+  animation: modalScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.shop-closed-card .closed-icon {
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(212, 162, 76, 0.1) 0%, rgba(212, 162, 76, 0.02) 100%);
+  border: 1px solid rgba(212, 162, 76, 0.2);
+  width: 90px;
+  height: 90px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 8px 24px rgba(212, 162, 76, 0.1);
+  color: var(--gold-light);
+  animation: sparkleFloat 3s ease-in-out infinite;
+}
+
+.shop-closed-card h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+
+.shop-closed-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.closed-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+}
+
+.closed-actions button {
+  width: 100%;
+  max-width: 320px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.closed-actions .primary {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--bg-primary);
+  border: none;
+  box-shadow: 0 4px 12px rgba(212, 162, 76, 0.25);
+}
+
+.closed-actions .primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(212, 162, 76, 0.35);
+}
+
+.closed-actions .wa-btn {
+  background: linear-gradient(135deg, #25D366, #1da853);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+}
+
+.closed-actions .wa-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.35);
+}
+
+.closed-actions .secondary {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+}
+
+.closed-actions .secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-primary);
+}
 .content-wrapper { position: relative; min-height: 50vh; transition: filter var(--transition-base); }
 .content-wrapper.blurred { filter: blur(6px); pointer-events: none; user-select: none; }
 
@@ -394,11 +508,10 @@ a.contact-value { color: var(--gold); font-weight: 600; }
   .about-grid { grid-template-columns: 1fr; }
   .about-section h3 { font-size: 26px; }
   .contact-page h3 { font-size: 24px; }
-  .shop-closed-card { padding: 28px 20px; max-width: 100%; }
-  .shop-closed-card h2 { font-size: 22px; }
-  .shop-closed-card .closed-icon { font-size: 40px; }
-  .closed-actions { flex-direction: column; align-items: stretch; }
-  .closed-actions .primary, .closed-actions .wa-btn, .closed-actions .secondary { width: 100%; text-align: center; }
+  .shop-closed-card { padding: 36px 24px; max-width: 100%; }
+  .shop-closed-card h2 { font-size: 20px; }
+  .shop-closed-card .closed-icon { width: 70px; height: 70px; font-size: 32px; margin-bottom: 16px; }
+  .closed-actions button { max-width: 100%; }
   .nav-drawer .nav-inner { width: 260px; }
   .order-panel { padding: 16px 0; }
 }
@@ -417,7 +530,8 @@ a.contact-value { color: var(--gold); font-weight: 600; }
   .content { padding: 8px 8px 120px; }
   .category-row { gap: 12px; }
   .shop-closed-card { padding: 24px 16px; }
-  .shop-closed-card h2 { font-size: 20px; }
+  .shop-closed-card h2 { font-size: 18px; }
+  .shop-closed-card .closed-icon { width: 60px; height: 60px; font-size: 28px; }
 }
 
 /* ===== 28. MOBILE NAV BREAKPOINT ===== */

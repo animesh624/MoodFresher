@@ -1541,9 +1541,32 @@ function AppContent() {
   const renderCustomerView = () => {
     if (loading) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary)' }}>
-          <div className="loader" style={{ border: '4px solid var(--border-default)', borderTop: '4px solid var(--gold)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
-          <p>Loading MoodFresher Delicious Menu...</p>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'var(--bg-primary)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-display)'
+        }}>
+          <div className="loader-spinner" style={{
+            border: '4px solid rgba(212, 162, 76, 0.1)',
+            borderTop: '4px solid var(--gold)',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '20px'
+          }}></div>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--gold-light)', margin: 0 }}>MoodFresher</h3>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '8px' }}>Loading delicious dishes...</p>
         </div>
       )
     }
@@ -1575,17 +1598,17 @@ function AppContent() {
           <>
             <section className="hero-banner">
               <div className="hero-content">
-                <span className="hero-veg-badge">🟢 100% VEG</span>
-                <h2>Delicious Food, Delivered Fresh!</h2>
-                <p className="hero-subtitle">Order Direct & Save More — No Middlemen, Just Great Food</p>
+                <span className="hero-veg-badge">🟢 100% PURE VEGETARIAN</span>
+                <h2>Heavenly Veg Delights, Crafted for True Foodies!</h2>
+                <p className="hero-subtitle">From sizzling tikkas & rich authentic curries to crispy golden waffles, enjoy premium taste cooked fresh daily.</p>
                 <div className="hero-trust-row">
-                  <span className="hero-trust-item">🏷️ Better Prices</span>
-                  <span className="hero-trust-item">🍳 Freshly Prepared</span>
-                  <span className="hero-trust-item">✅ Hygienic Food</span>
-                  <span className="hero-trust-item">🚗 Fast Delivery</span>
+                  <span className="hero-trust-item">🏷️ Direct Savings</span>
+                  <span className="hero-trust-item">🌱 100% Pure Veg</span>
+                  <span className="hero-trust-item">🍳 Fresh & Hygenic</span>
+                  <span className="hero-trust-item">🔥 Piping Hot Delivery</span>
                 </div>
                 <div className="hero-actions">
-                  <button className="hero-btn-primary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore Menu</button>
+                  <button className="hero-btn-primary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Taste the Magic</button>
                 </div>
               </div>
             </section>
@@ -1594,7 +1617,7 @@ function AppContent() {
             {banners.length > 0 && (
               <section className="offers-carousel-section">
                 <div className="section-header">
-                  <h4>🔥 Special Offers for You</h4>
+                  <h4>🔥 Today's Exclusive Foodie Deals</h4>
                 </div>
                 <div className="offers-grid">
                   {banners.map(banner => (
@@ -1622,22 +1645,22 @@ function AppContent() {
               <div className="promo-card promo-green">
                 <span className="promo-icon">🚚</span>
                 <div className="promo-text">
-                  <div className="promo-title">FREE DELIVERY</div>
-                  <div className="promo-sub">Within 3 km • ₹10/km beyond</div>
+                  <div className="promo-title">PIPING HOT DELIVERY</div>
+                  <div className="promo-sub">Free within 3 km • ₹10/km beyond</div>
                 </div>
               </div>
               <div className="promo-card promo-gold">
                 <span className="promo-icon">💰</span>
                 <div className="promo-text">
-                  <div className="promo-title">BEST PRICES</div>
-                  <div className="promo-sub">Order direct & save more</div>
+                  <div className="promo-title">PURE FOODIE SAVINGS</div>
+                  <div className="promo-sub">Zero markups, direct from our kitchen</div>
                 </div>
               </div>
               <div className="promo-card promo-orange">
                 <span className="promo-icon">🎉</span>
                 <div className="promo-text">
-                  <div className="promo-title">PARTIES & MARRIAGE</div>
-                  <div className="promo-sub">Bulk orders from 50+ plates</div>
+                  <div className="promo-title">FESTIVE VEG FEASTS</div>
+                  <div className="promo-sub">Catering & bulk orders from 50+ plates</div>
                 </div>
               </div>
             </section>
@@ -1867,10 +1890,18 @@ function AppContent() {
                 )}
               </div>
               <div className="bottom-bar">
-                <div className="bottom-bar-left">
-                  <span className="bottom-bar-count">{cartCount} item{cartCount > 1 ? 's' : ''}</span>
-                  <span className="bottom-bar-total">₹{total}</span>
-                  {discountAmount > 0 && <span className="bottom-bar-discount">saved ₹{discountAmount}</span>}
+                <div className="bottom-bar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span key={`count-${cartCount}`} className="bottom-bar-count" style={{ display: 'inline-block', animation: 'countBounce 0.3s ease' }}>
+                    {cartCount} item{cartCount > 1 ? 's' : ''}
+                  </span>
+                  <span key={`total-${total}`} className="bottom-bar-total" style={{ display: 'inline-block', animation: 'countBounce 0.3s ease' }}>
+                    ₹{total}
+                  </span>
+                  {discountAmount > 0 && (
+                    <span key={`saved-${discountAmount}`} className="bottom-bar-discount" style={{ display: 'inline-block', animation: 'countBounce 0.3s ease' }}>
+                      saved ₹{discountAmount}
+                    </span>
+                  )}
                 </div>
                 <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
                   View Cart →

@@ -14,12 +14,16 @@ import cartRoutes from './routes/cart.js';
 
 import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load env vars
-dotenv.config({ path: path.resolve(__dirname, './.env') });
+// Load env vars if .env file exists (local development)
+const envPath = path.resolve(__dirname, './.env');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
 
 // Connect to database
 connectDB();
