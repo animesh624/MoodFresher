@@ -208,7 +208,14 @@ function AppContent() {
   const [deliveryDistance, setDeliveryDistance] = useState(null)
   const [activeCat, setActiveCat] = useState('All')
   const [navOpen, setNavOpen] = useState(false)
-  const [view, setView] = useState('menu')
+  // --- Synchronously detect admin order deep-link BEFORE first render ---
+  const [view, setView] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('admin_order') && localStorage.getItem('adminToken')) return 'admin'
+    } catch (e) {}
+    return 'menu'
+  })
   const [exploreMenu, setExploreMenu] = useState(false)
   const [celebratedTier, setCelebratedTier] = useState(null)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -225,8 +232,14 @@ function AppContent() {
   const [cartLoaded, setCartLoaded] = useState(false)
 
   // Admin states
-  const [adminToken, setAdminToken] = useState(localStorage.getItem('adminToken') || null)
-  const [adminView, setAdminView] = useState('dashboard')
+  const [adminToken, setAdminToken] = useState(() => localStorage.getItem('adminToken') || null)
+  const [adminView, setAdminView] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('admin_order') && localStorage.getItem('adminToken')) return 'orders'
+    } catch (e) {}
+    return 'dashboard'
+  })
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
   const [adminError, setAdminError] = useState('')
@@ -372,6 +385,8 @@ function AppContent() {
   }, [])
 
   // Handle admin order deep-link: ?admin_order=ORDER_ID
+  // NOTE: view, adminToken, adminView are already initialized synchronously above.
+  // This effect only handles URL cleanup + fetching the specific order to open.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const adminOrderId = params.get('admin_order')
@@ -381,14 +396,7 @@ function AppContent() {
     window.history.replaceState({}, '', window.location.pathname)
 
     const storedToken = localStorage.getItem('adminToken')
-    if (!storedToken) return // not an admin, ignore
-
-    // Set the admin token in state (critical: without this renderAdminView shows login form)
-    setAdminToken(storedToken)
-
-    // Switch to admin view and load data
-    setView('admin')
-    setAdminView('orders')
+    if (!storedToken) return
 
     // Fetch orders and open the specific order modal
     const loadAndFocusOrder = async () => {
@@ -397,7 +405,6 @@ function AppContent() {
           headers: { 'Authorization': `Bearer ${storedToken}` }
         })
         if (!res.ok) {
-          // Token might be expired — clear it and fall back
           localStorage.removeItem('adminToken')
           setAdminToken(null)
           setView('menu')
@@ -406,15 +413,14 @@ function AppContent() {
         const orders = await res.json()
         setAdminOrders(Array.isArray(orders) ? orders : [])
         const target = Array.isArray(orders) ? orders.find(o => o.orderId === adminOrderId) : null
-        if (target) {
-          setSelectedAdminOrder(target)
-        }
+        if (target) setSelectedAdminOrder(target)
       } catch (err) {
         console.error('Failed to load admin order from deep link', err)
       }
     }
     loadAndFocusOrder()
   }, [])
+
 
   // Sync cart changes to MongoDB database with 500ms debounce
   useEffect(() => {
