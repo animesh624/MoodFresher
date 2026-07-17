@@ -283,10 +283,10 @@ app.get('/order/:orderId', async (req, res) => {
             color: var(--gold-light);
           }
           .btn-refresh {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-            color: var(--bg-primary);
-            border: none;
-            padding: 14px;
+            background-color: var(--bg-card);
+            border: 2px solid var(--gold);
+            color: #ffffff !important;
+            padding: 14px 20px;
             border-radius: 30px;
             font-size: 13px;
             font-weight: 700;
@@ -294,10 +294,16 @@ app.get('/order/:orderId', async (req, res) => {
             letter-spacing: 0.5px;
             cursor: pointer;
             width: 100%;
-            transition: transform 0.2s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 15px rgba(212, 162, 76, 0.2);
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
           }
           .btn-refresh:hover {
-            transform: scale(1.02);
+            background-color: var(--gold);
+            color: #0a0a0f !important;
+            box-shadow: 0 0 25px rgba(212, 162, 76, 0.4);
           }
           .alert-rejected {
             background-color: rgba(255, 77, 79, 0.08);
@@ -315,6 +321,31 @@ app.get('/order/:orderId', async (req, res) => {
             margin-top: 10px;
             border: 1px solid var(--border-default);
           }
+
+          /* Stepper horizontal placements on mobile screen */
+          @media (max-width: 480px) {
+            .stepper {
+              gap: 4px;
+              overflow-x: auto;
+              padding-bottom: 12px;
+              scrollbar-width: none;
+              -webkit-overflow-scrolling: touch;
+              display: flex;
+              justify-content: flex-start;
+            }
+            .stepper::-webkit-scrollbar {
+              display: none;
+            }
+            .step {
+              min-width: 75px;
+              flex: 0 0 auto;
+            }
+            .stepper::before {
+              top: 23px;
+              left: 30px;
+              right: 30px;
+            }
+          }
         </style>
       </head>
       <body>
@@ -323,6 +354,9 @@ app.get('/order/:orderId', async (req, res) => {
             <div class="brand">MoodFresher</div>
             <div class="brand-tag">Cafe & Restaurant</div>
           </header>
+
+          <!-- Refresh Button at the top of the page above status on mobile screen -->
+          <button class="btn-refresh" onclick="window.location.reload()">🔄 Refresh Order Status</button>
 
           <div class="card">
             <div class="card-title">
@@ -359,10 +393,6 @@ app.get('/order/:orderId', async (req, res) => {
                 </div>
               </div>
             `}
-            
-            <div style="margin-top: 20px;">
-              <button class="btn-refresh" onclick="window.location.reload()">🔄 Refresh Status</button>
-            </div>
           </div>
 
           <div class="card">
