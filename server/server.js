@@ -101,6 +101,21 @@ app.get('/order/:orderId', async (req, res) => {
         <meta property="og:image" content="${order.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80'}" />
         <meta property="og:type" content="website" />
         
+        <!-- Admin redirect: if logged in as admin, redirect to admin dashboard for this order -->
+        <script>
+          (function() {
+            try {
+              var adminToken = localStorage.getItem('adminToken');
+              if (adminToken) {
+                // Admin is logged in - redirect to admin dashboard for this order
+                window.location.replace('/?admin_order=${order.orderId}');
+              }
+            } catch(e) {
+              // localStorage not available (e.g. private mode), show normal page
+            }
+          })();
+        </script>
+        
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
         
         <style>
@@ -112,8 +127,9 @@ app.get('/order/:orderId', async (req, res) => {
             --bg-card: #14141e;
             --text-primary: #f1f1f7;
             --text-secondary: #a0a0b8;
-            --text-muted: #6b6b82;
-            --border-default: rgba(255, 255, 255, 0.08);
+            --text-muted: #9090a8;
+            --border-default: rgba(255, 255, 255, 0.12);
+            --border-visible: rgba(255, 255, 255, 0.18);
           }
           body {
             background-color: var(--bg-primary);
@@ -242,42 +258,63 @@ app.get('/order/:orderId', async (req, res) => {
           .details-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 12px;
+            align-items: center;
+            margin-bottom: 10px;
             font-size: 14px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
           }
           .details-label {
-            color: var(--text-secondary);
+            color: var(--text-muted);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
           }
           .details-value {
-            font-weight: 500;
+            font-weight: 600;
             text-align: right;
-            max-width: 70%;
+            max-width: 65%;
+            color: var(--text-primary);
           }
           .invoice-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
             font-size: 13px;
+            color: var(--text-primary);
           }
           .invoice-table th {
             text-align: left;
-            color: var(--text-muted);
-            font-weight: 600;
-            border-bottom: 1px solid var(--border-default);
-            padding-bottom: 8px;
+            color: var(--gold-light);
+            font-weight: 700;
+            border-bottom: 2px solid rgba(240, 200, 106, 0.3);
+            padding-bottom: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
           .invoice-table td {
-            padding: 10px 0;
-            border-bottom: 1px dashed var(--border-default);
+            padding: 11px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            color: #e8e8f0;
+            font-size: 13px;
+          }
+          .invoice-table tr:last-child td {
+            border-bottom: none;
+          }
+          .invoice-table td:last-child {
+            color: var(--text-primary);
+            font-weight: 500;
           }
           .total-row {
             margin-top: 16px;
-            border-top: 1px solid var(--border-default);
+            border-top: 1px solid rgba(240, 200, 106, 0.25);
             padding-top: 16px;
             display: flex;
             justify-content: space-between;
             font-weight: 700;
             font-size: 16px;
+            color: var(--text-primary);
           }
           .total-price {
             color: var(--gold-light);
@@ -322,28 +359,40 @@ app.get('/order/:orderId', async (req, res) => {
             border: 1px solid var(--border-default);
           }
 
-          /* Stepper horizontal placements on mobile screen */
-          @media (max-width: 480px) {
+          /* Stepper vertical layout on mobile screen */
+          @media (max-width: 600px) {
             .stepper {
-              gap: 4px;
-              overflow-x: auto;
-              padding-bottom: 12px;
-              scrollbar-width: none;
-              -webkit-overflow-scrolling: touch;
-              display: flex;
-              justify-content: flex-start;
-            }
-            .stepper::-webkit-scrollbar {
-              display: none;
-            }
-            .step {
-              min-width: 75px;
-              flex: 0 0 auto;
+              flex-direction: column;
+              gap: 0;
+              overflow-x: visible;
+              margin: 16px 0;
             }
             .stepper::before {
-              top: 23px;
-              left: 30px;
-              right: 30px;
+              /* Vertical connecting line */
+              width: 2px;
+              height: calc(100% - 44px);
+              top: 22px;
+              left: 21px;
+              right: auto;
+            }
+            .step {
+              flex-direction: row;
+              align-items: center;
+              gap: 16px;
+              padding: 8px 0;
+              flex: unset;
+              min-width: unset;
+            }
+            .step-icon {
+              flex-shrink: 0;
+            }
+            .step-label {
+              margin-top: 0;
+              text-align: left;
+              font-size: 13px;
+            }
+            .step.active .step-label {
+              font-weight: 600;
             }
           }
         </style>
