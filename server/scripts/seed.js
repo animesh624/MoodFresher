@@ -79,6 +79,11 @@ const seedData = async () => {
         priceFull: item.priceFull !== undefined ? item.priceFull : null,
         hasHalfFull,
         isAvailable: true,
+        weight: item.weight || '',
+        breakdown: item.breakdown || '',
+        originalPrice: item.originalPrice !== undefined ? item.originalPrice : null,
+        originalPriceHalf: item.originalPriceHalf !== undefined ? item.originalPriceHalf : null,
+        originalPriceFull: item.originalPriceFull !== undefined ? item.originalPriceFull : null,
       };
     });
 

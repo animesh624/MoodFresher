@@ -238,7 +238,8 @@ function AppContent() {
   const [editingItem, setEditingItem] = useState(null) // null for create
   const [itemForm, setItemForm] = useState({
     itemName: '', category: '', subcategory: '', photoName: '', description: '',
-    price: '', priceHalf: '', priceFull: '', hasHalfFull: false, isAvailable: true
+    price: '', priceHalf: '', priceFull: '', hasHalfFull: false, isAvailable: true,
+    weight: '', breakdown: '', originalPrice: '', originalPriceHalf: '', originalPriceFull: ''
   })
   const [itemSearch, setItemSearch] = useState('')
 
@@ -456,7 +457,12 @@ function AppContent() {
         img: imageSrc,
         category: item.category,
         subcategory: item.subcategory,
-        isAvailable: item.isAvailable !== false
+        isAvailable: item.isAvailable !== false,
+        weight: item.weight || '',
+        breakdown: item.breakdown || '',
+        originalPrice: item.originalPrice ?? null,
+        originalPriceHalf: item.originalPriceHalf ?? null,
+        originalPriceFull: item.originalPriceFull ?? null
       }
     })
   }, [items])
@@ -902,17 +908,23 @@ function AppContent() {
         subcategory: item.subcategory || '',
         photoName: item.photoName || '',
         description: item.description || '',
-        price: item.price !== null ? item.price : '',
-        priceHalf: item.priceHalf !== null ? item.priceHalf : '',
-        priceFull: item.priceFull !== null ? item.priceFull : '',
+        price: item.price !== null && item.price !== undefined ? item.price : '',
+        priceHalf: item.priceHalf !== null && item.priceHalf !== undefined ? item.priceHalf : '',
+        priceFull: item.priceFull !== null && item.priceFull !== undefined ? item.priceFull : '',
         hasHalfFull: item.hasHalfFull,
-        isAvailable: item.isAvailable
+        isAvailable: item.isAvailable,
+        weight: item.weight || '',
+        breakdown: item.breakdown || '',
+        originalPrice: item.originalPrice !== null && item.originalPrice !== undefined ? item.originalPrice : '',
+        originalPriceHalf: item.originalPriceHalf !== null && item.originalPriceHalf !== undefined ? item.originalPriceHalf : '',
+        originalPriceFull: item.originalPriceFull !== null && item.originalPriceFull !== undefined ? item.originalPriceFull : ''
       })
     } else {
       setEditingItem(null)
       setItemForm({
         itemName: '', category: 'Chinese Combos', subcategory: '', photoName: '', description: '',
-        price: '', priceHalf: '', priceFull: '', hasHalfFull: false, isAvailable: true
+        price: '', priceHalf: '', priceFull: '', hasHalfFull: false, isAvailable: true,
+        weight: '', breakdown: '', originalPrice: '', originalPriceHalf: '', originalPriceFull: ''
       })
     }
     setItemModalOpen(true)
@@ -930,12 +942,18 @@ function AppContent() {
     const price = itemForm.price === '' ? null : Number(itemForm.price)
     const priceHalf = itemForm.priceHalf === '' ? null : Number(itemForm.priceHalf)
     const priceFull = itemForm.priceFull === '' ? null : Number(itemForm.priceFull)
+    const originalPrice = itemForm.originalPrice === '' ? null : Number(itemForm.originalPrice)
+    const originalPriceHalf = itemForm.originalPriceHalf === '' ? null : Number(itemForm.originalPriceHalf)
+    const originalPriceFull = itemForm.originalPriceFull === '' ? null : Number(itemForm.originalPriceFull)
 
     const payload = {
       ...itemForm,
       price,
       priceHalf,
       priceFull,
+      originalPrice,
+      originalPriceHalf,
+      originalPriceFull,
       hasHalfFull: !!itemForm.hasHalfFull
     }
 
@@ -1405,67 +1423,117 @@ function AppContent() {
 
   const renderMenuGrid = (itemsList) => (
     <div className="menu-grid">
-      {itemsList.map(item => (
-        <article className="menu-card" key={item.id}>
-          <div className="menu-card-img-wrapper">
-            <div className="food-img" style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-            <span className="veg-indicator">●</span>
-          </div>
-          <div className="menu-info">
-            <div>
-              <div className="menu-title">{item.name}</div>
-              <div className="menu-desc">{item.desc}</div>
+      {itemsList.map(item => {
+        // Pre-calculate discount percentage for single price items
+        const dropPercent = item.originalPrice && item.originalPrice > item.price
+          ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
+          : null;
+
+        // Pre-calculate discount percentages for variant items
+        const dropPercentHalf = item.originalPriceHalf && item.originalPriceHalf > item.priceHalf
+          ? Math.round(((item.originalPriceHalf - item.priceHalf) / item.originalPriceHalf) * 100)
+          : null;
+        
+        const dropPercentFull = item.originalPriceFull && item.originalPriceFull > item.priceFull
+          ? Math.round(((item.originalPriceFull - item.priceFull) / item.originalPriceFull) * 100)
+          : null;
+
+        return (
+          <article className="menu-card" key={item.id}>
+            <div className="menu-card-img-wrapper">
+              <div className="food-img" style={{ backgroundImage: item.img ? `url(${item.img})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+              <span className="veg-indicator">●</span>
             </div>
-            {item.hasHalfFull ? (
-              <div className="menu-footer half-full-footer">
-                <div className="variant-row">
-                  <div className="variant-info">
-                    <span className="variant-label half-label">Half</span>
-                    <span className="variant-price">₹{item.priceHalf}</span>
+            <div className="menu-info">
+              <div>
+                <div className="menu-title">{item.name}</div>
+                {item.weight && (
+                  <div className="portion-badge">
+                    <span>⚖️</span> {item.weight}
                   </div>
-                  {quantities[`${item.id}_half`] > 0 ? (
-                    <div className="qty-stepper">
-                      <button disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>−</button>
-                      <span className="qty-value">{quantities[`${item.id}_half`]}</span>
-                      <button disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
-                    </div>
-                  ) : (
-                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); }}>ADD</button>
-                  )}
-                </div>
-                <div className="variant-row">
-                  <div className="variant-info">
-                    <span className="variant-label full-label">Full</span>
-                    <span className="variant-price">₹{item.priceFull}</span>
+                )}
+                <div className="menu-desc">{item.desc}</div>
+                {item.breakdown && (
+                  <div className="portion-breakdown">
+                    <strong>Contains:</strong> {item.breakdown}
                   </div>
-                  {quantities[`${item.id}_full`] > 0 ? (
-                    <div className="qty-stepper">
-                      <button disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>−</button>
-                      <span className="qty-value">{quantities[`${item.id}_full`]}</span>
-                      <button disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
-                    </div>
-                  ) : (
-                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); }}>ADD</button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="menu-footer">
-                <div className="price">₹{item.price}</div>
-                {quantities[item.id] > 0 ? (
-                  <div className="qty-stepper">
-                    <button disabled={!isOpen} onClick={() => dec(`${item.id}`)}>−</button>
-                    <span className="qty-value">{quantities[item.id]}</span>
-                    <button disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
-                  </div>
-                ) : (
-                  <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); }}>ADD</button>
                 )}
               </div>
-            )}
-          </div>
-        </article>
-      ))}
+              {item.hasHalfFull ? (
+                <div className="menu-footer half-full-footer">
+                  <div className="variant-row">
+                    <div className="variant-info">
+                      <span className="variant-label half-label">Half</span>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {dropPercentHalf && (
+                          <span className="price-original" style={{ fontSize: '0.8em', marginRight: 4 }}>₹{item.originalPriceHalf}</span>
+                        )}
+                        <span className="variant-price">₹{item.priceHalf}</span>
+                        {dropPercentHalf && (
+                          <span className="price-discount-tag" style={{ marginLeft: 4, padding: '1px 4px', fontSize: 9 }}>{dropPercentHalf}% OFF</span>
+                        )}
+                      </div>
+                    </div>
+                    {quantities[`${item.id}_half`] > 0 ? (
+                      <div className="qty-stepper">
+                        <button disabled={!isOpen} onClick={() => dec(`${item.id}_half`)}>−</button>
+                        <span className="qty-value">{quantities[`${item.id}_half`]}</span>
+                        <button disabled={!isOpen} onClick={() => inc(`${item.id}_half`)}>+</button>
+                      </div>
+                    ) : (
+                      <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_half`); }}>ADD</button>
+                    )}
+                  </div>
+                  <div className="variant-row">
+                    <div className="variant-info">
+                      <span className="variant-label full-label">Full</span>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {dropPercentFull && (
+                          <span className="price-original" style={{ fontSize: '0.8em', marginRight: 4 }}>₹{item.originalPriceFull}</span>
+                        )}
+                        <span className="variant-price">₹{item.priceFull}</span>
+                        {dropPercentFull && (
+                          <span className="price-discount-tag" style={{ marginLeft: 4, padding: '1px 4px', fontSize: 9 }}>{dropPercentFull}% OFF</span>
+                        )}
+                      </div>
+                    </div>
+                    {quantities[`${item.id}_full`] > 0 ? (
+                      <div className="qty-stepper">
+                        <button disabled={!isOpen} onClick={() => dec(`${item.id}_full`)}>−</button>
+                        <span className="qty-value">{quantities[`${item.id}_full`]}</span>
+                        <button disabled={!isOpen} onClick={() => inc(`${item.id}_full`)}>+</button>
+                      </div>
+                    ) : (
+                      <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}_full`); }}>ADD</button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="menu-footer">
+                  <div className="price">
+                    {dropPercent && (
+                      <span className="price-original">₹{item.originalPrice}</span>
+                    )}
+                    ₹{item.price}
+                    {dropPercent && (
+                      <span className="price-discount-tag">{dropPercent}% OFF</span>
+                    )}
+                  </div>
+                  {quantities[item.id] > 0 ? (
+                    <div className="qty-stepper">
+                      <button disabled={!isOpen} onClick={() => dec(`${item.id}`)}>−</button>
+                      <span className="qty-value">{quantities[item.id]}</span>
+                      <button disabled={!isOpen} onClick={() => inc(`${item.id}`)}>+</button>
+                    </div>
+                  ) : (
+                    <button className="add-btn" disabled={!isOpen} onClick={() => { inc(`${item.id}`); }}>ADD</button>
+                  )}
+                </div>
+              )}
+            </div>
+          </article>
+        );
+      })}
     </div>
   )
 
@@ -2366,6 +2434,29 @@ function AppContent() {
                     />
                   </div>
 
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Portion Weight / Size (e.g. 450g)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. 400g / 2 Pieces"
+                        value={itemForm.weight}
+                        onChange={e => setItemForm({ ...itemForm, weight: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <label>Quantity Breakdown (Portions)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. 4 Chapati, 100g Paneer, 100g Rice"
+                        value={itemForm.breakdown}
+                        onChange={e => setItemForm({ ...itemForm, breakdown: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
                   {/* Pricing Switcher */}
                   <div className="checkbox-group" style={{ marginBottom: 16 }}>
                     <input
@@ -2378,38 +2469,74 @@ function AppContent() {
                   </div>
 
                   {itemForm.hasHalfFull ? (
-                    <div style={{ display: 'flex', gap: 12 }}>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label>Half Plate Price (₹)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={itemForm.priceHalf}
-                          onChange={e => setItemForm({ ...itemForm, priceHalf: e.target.value })}
-                          required
-                        />
+                    <div>
+                      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <label>Half Plate Discounted Price (₹)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={itemForm.priceHalf}
+                            onChange={e => setItemForm({ ...itemForm, priceHalf: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <label>Half Plate Original Price (₹ - Optional)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            placeholder="To show crossed-out price"
+                            value={itemForm.originalPriceHalf}
+                            onChange={e => setItemForm({ ...itemForm, originalPriceHalf: e.target.value })}
+                          />
+                        </div>
                       </div>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label>Full Plate Price (₹)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={itemForm.priceFull}
-                          onChange={e => setItemForm({ ...itemForm, priceFull: e.target.value })}
-                          required
-                        />
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <label>Full Plate Discounted Price (₹)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={itemForm.priceFull}
+                            onChange={e => setItemForm({ ...itemForm, priceFull: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <label>Full Plate Original Price (₹ - Optional)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            placeholder="To show crossed-out price"
+                            value={itemForm.originalPriceFull}
+                            onChange={e => setItemForm({ ...itemForm, originalPriceFull: e.target.value })}
+                          />
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="form-group">
-                      <label>Standard Price (₹)</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={itemForm.price}
-                        onChange={e => setItemForm({ ...itemForm, price: e.target.value })}
-                        required
-                      />
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label>Discounted Price (₹)</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={itemForm.price}
+                          onChange={e => setItemForm({ ...itemForm, price: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label>Original Price (₹ - Optional)</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="To show crossed-out price"
+                          value={itemForm.originalPrice}
+                          onChange={e => setItemForm({ ...itemForm, originalPrice: e.target.value })}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -2503,6 +2630,9 @@ function AppContent() {
                         required
                         min="0"
                       />
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
+                        Set to 0 for no conditions (special clients).
+                      </span>
                     </div>
                   </div>
                   <div className="form-group">

@@ -31,5 +31,8 @@ const offerBannerSchema = new mongoose.Schema(
   }
 );
 
+// Define index for querying active banners on home screen load
+offerBannerSchema.index({ isActive: 1 });
+
 const OfferBanner = mongoose.model('OfferBanner', offerBannerSchema);
 export default OfferBanner;

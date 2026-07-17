@@ -1,27 +1,16 @@
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import Item from '../models/Item.js';
 import Settings from '../models/Settings.js';
 import Coupon from '../models/Coupon.js';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
+import itemsData from '../../src/data/items.json' assert { type: 'json' };
 
 const router = express.Router();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const autoSeed = async () => {
   try {
-    const itemsJsonPath = path.resolve(__dirname, '../../src/data/items.json');
-    if (!fs.existsSync(itemsJsonPath)) {
-      console.warn(`items.json not found at ${itemsJsonPath}, skipping auto-seed`);
-      return;
-    }
-    const rawData = fs.readFileSync(itemsJsonPath, 'utf-8');
-    const parsedData = JSON.parse(rawData);
+    const parsedData = itemsData;
 
     // Seed Admin User if empty
     const userCount = await User.countDocuments();
@@ -123,7 +112,11 @@ router.get('/', async (req, res) => {
 // @route   POST /api/items
 // @access  Private
 router.post('/', protect, async (req, res) => {
-  const { itemName, category, subcategory, photoName, description, price, priceHalf, priceFull, hasHalfFull, isAvailable } = req.body;
+  const { 
+    itemName, category, subcategory, photoName, description, 
+    price, priceHalf, priceFull, hasHalfFull, isAvailable,
+    weight, breakdown, originalPrice, originalPriceHalf, originalPriceFull
+  } = req.body;
 
   try {
     // Generate new unique numeric id (highest id + 1)
@@ -142,6 +135,11 @@ router.post('/', protect, async (req, res) => {
       priceFull: priceFull === '' ? null : priceFull,
       hasHalfFull: !!hasHalfFull,
       isAvailable: isAvailable !== undefined ? isAvailable : true,
+      weight: weight || '',
+      breakdown: breakdown || '',
+      originalPrice: originalPrice === '' ? null : originalPrice,
+      originalPriceHalf: originalPriceHalf === '' ? null : originalPriceHalf,
+      originalPriceFull: originalPriceFull === '' ? null : originalPriceFull,
     });
 
     const createdItem = await item.save();
@@ -155,7 +153,11 @@ router.post('/', protect, async (req, res) => {
 // @route   PUT /api/items/:id
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
-  const { itemName, category, subcategory, photoName, description, price, priceHalf, priceFull, hasHalfFull, isAvailable } = req.body;
+  const { 
+    itemName, category, subcategory, photoName, description, 
+    price, priceHalf, priceFull, hasHalfFull, isAvailable,
+    weight, breakdown, originalPrice, originalPriceHalf, originalPriceFull
+  } = req.body;
 
   try {
     const item = await Item.findOne({ id: req.params.id });
@@ -171,6 +173,11 @@ router.put('/:id', protect, async (req, res) => {
       item.priceFull = priceFull === '' ? null : (priceFull !== undefined ? priceFull : item.priceFull);
       item.hasHalfFull = hasHalfFull !== undefined ? !!hasHalfFull : item.hasHalfFull;
       item.isAvailable = isAvailable !== undefined ? isAvailable : item.isAvailable;
+      item.weight = weight !== undefined ? weight : item.weight;
+      item.breakdown = breakdown !== undefined ? breakdown : item.breakdown;
+      item.originalPrice = originalPrice === '' ? null : (originalPrice !== undefined ? originalPrice : item.originalPrice);
+      item.originalPriceHalf = originalPriceHalf === '' ? null : (originalPriceHalf !== undefined ? originalPriceHalf : item.originalPriceHalf);
+      item.originalPriceFull = originalPriceFull === '' ? null : (originalPriceFull !== undefined ? originalPriceFull : item.originalPriceFull);
 
       const updatedItem = await item.save();
       res.json(updatedItem);
