@@ -1035,7 +1035,7 @@ function AppContent() {
       combinedAddress += `\nInstructions: ${instructions.trim()}`
     }
     if (location) {
-      combinedAddress += `\nLive Location: ${location}`
+      combinedAddress += `\n📍 Live Location: ${location}`
     }
 
     const orderPayload = {
@@ -2406,8 +2406,15 @@ function AppContent() {
                     if (placedOrder.imageUrl) {
                       waMsg += `\n\nSecure Invoice Image: ${placedOrder.imageUrl}`;
                     }
-                    if (location) {
-                      waMsg += `\n\n📍 Live Location: ${location}`;
+                    let currentLoc = location;
+                    if (!currentLoc && placedOrder.customerAddress) {
+                      const match = placedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
+                      if (match) {
+                        currentLoc = match[1];
+                      }
+                    }
+                    if (currentLoc) {
+                      waMsg += `\n\n📍 Live Location: ${currentLoc}`;
                     }
                     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMsg)}`, '_blank');
                   }}>
@@ -2683,50 +2690,100 @@ function AppContent() {
                   No orders have been placed yet.
                 </div>
               ) : (
-                <div className="admin-table-container">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Mobile</th>
-                        <th>Items Count</th>
-                        <th>Total (₹)</th>
-                        <th>Status</th>
-                        <th>Order Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {adminOrders.map(order => (
-                        <tr key={order._id}>
-                          <td style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--gold-light)' }}>
-                            {order.orderId}
-                          </td>
-                          <td style={{ fontWeight: 'bold' }}>{order.customerName}</td>
-                          <td>{order.customerMobile}</td>
-                          <td>{order.items.reduce((s, i) => s + i.qty, 0)}</td>
-                          <td style={{ fontWeight: 'bold' }}>₹{order.total}</td>
-                          <td>
-                            <span className={`admin-badge status-${order.status.toLowerCase()}`}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                          <td>
-                            <button
-                              className="admin-btn admin-btn-secondary"
-                              style={{ padding: '4px 10px', fontSize: 12 }}
-                              onClick={() => setSelectedAdminOrder(order)}
-                            >
-                              Details / Edit
-                            </button>
-                          </td>
+                <>
+                  {/* Desktop table view */}
+                  <div className="admin-table-container admin-orders-desktop">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Customer</th>
+                          <th>Mobile</th>
+                          <th>Items</th>
+                          <th>Total (₹)</th>
+                          <th>Status</th>
+                          <th>Date</th>
+                          <th>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {adminOrders.map(order => (
+                          <tr key={order._id}>
+                            <td style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--gold-light)' }}>
+                              {order.orderId}
+                            </td>
+                            <td style={{ fontWeight: 'bold' }}>{order.customerName}</td>
+                            <td>{order.customerMobile}</td>
+                            <td>{order.items.reduce((s, i) => s + i.qty, 0)}</td>
+                            <td style={{ fontWeight: 'bold' }}>₹{order.total}</td>
+                            <td>
+                              <span className={`admin-badge status-${order.status.toLowerCase()}`}>
+                                {order.status}
+                              </span>
+                            </td>
+                            <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              <button
+                                className="admin-btn admin-btn-secondary"
+                                style={{ padding: '4px 10px', fontSize: 12 }}
+                                onClick={() => setSelectedAdminOrder(order)}
+                              >
+                                Details / Edit
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile card view */}
+                  <div className="admin-orders-mobile">
+                    {adminOrders.map(order => (
+                      <div key={order._id} className="order-mobile-card">
+                        <div className="order-mobile-card-header">
+                          <span className="order-mobile-id">{order.orderId}</span>
+                          <span className={`admin-badge status-${order.status.toLowerCase()}`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        <div className="order-mobile-card-body">
+                          <div className="order-mobile-row">
+                            <span className="order-mobile-label">👤 Customer</span>
+                            <span className="order-mobile-value">{order.customerName}</span>
+                          </div>
+                          <div className="order-mobile-row">
+                            <span className="order-mobile-label">📞 Mobile</span>
+                            <span className="order-mobile-value">
+                              <a href={`tel:${order.customerMobile}`} style={{ color: 'var(--gold-light)', textDecoration: 'none' }}>
+                                {order.customerMobile}
+                              </a>
+                            </span>
+                          </div>
+                          <div className="order-mobile-row">
+                            <span className="order-mobile-label">🛒 Items</span>
+                            <span className="order-mobile-value">{order.items.reduce((s, i) => s + i.qty, 0)} items</span>
+                          </div>
+                          <div className="order-mobile-row">
+                            <span className="order-mobile-label">💰 Total</span>
+                            <span className="order-mobile-value" style={{ color: 'var(--gold-light)', fontWeight: 700 }}>₹{order.total}</span>
+                          </div>
+                          <div className="order-mobile-row">
+                            <span className="order-mobile-label">📅 Date</span>
+                            <span className="order-mobile-value">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                        <button
+                          className="admin-btn admin-btn-primary"
+                          style={{ width: '100%', marginTop: 12 }}
+                          onClick={() => setSelectedAdminOrder(order)}
+                        >
+                          📋 View Details & Update Status
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -3084,6 +3141,35 @@ function AppContent() {
             </div>
           )}
         </main>
+
+        {/* ── Mobile Bottom Nav (shows only on mobile) ── */}
+        <nav className="admin-mobile-nav">
+          <button className={`admin-mobile-nav-btn ${adminView === 'dashboard' ? 'active' : ''}`} onClick={() => setAdminView('dashboard')}>
+            <span className="nav-icon">📊</span>
+            <span>Home</span>
+          </button>
+          <button className={`admin-mobile-nav-btn ${adminView === 'orders' ? 'active' : ''}`} onClick={() => setAdminView('orders')}>
+            <span className="nav-icon">📦</span>
+            <span>Orders</span>
+          </button>
+          <button className={`admin-mobile-nav-btn ${adminView === 'menu' ? 'active' : ''}`} onClick={() => setAdminView('menu')}>
+            <span className="nav-icon">🍽️</span>
+            <span>Menu</span>
+          </button>
+          <button className={`admin-mobile-nav-btn ${adminView === 'coupons' ? 'active' : ''}`} onClick={() => setAdminView('coupons')}>
+            <span className="nav-icon">🏷️</span>
+            <span>Coupons</span>
+          </button>
+          <button className={`admin-mobile-nav-btn ${adminView === 'settings' ? 'active' : ''}`} onClick={() => setAdminView('settings')}>
+            <span className="nav-icon">⚙️</span>
+            <span>Settings</span>
+          </button>
+          <button className="admin-mobile-nav-btn" onClick={handleAdminLogout} style={{ color: 'var(--red)' }}>
+            <span className="nav-icon">🚪</span>
+            <span>Logout</span>
+          </button>
+        </nav>
+
         {/* ── Admin Order Details Modal ── */}
         {selectedAdminOrder && (
           <div className="admin-modal-backdrop" onClick={() => setSelectedAdminOrder(null)}>

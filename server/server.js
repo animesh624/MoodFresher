@@ -50,6 +50,25 @@ app.use('/api/orders', ordersRoutes);
 app.get('/order/:orderId', async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
+    
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    const formatAddress = (addr) => {
+      const escaped = escapeHtml(addr);
+      return escaped.replace(
+        /(https?:\/\/[^\s]+)/g,
+        '<a href="$1" target="_blank" style="color: var(--gold-light); text-decoration: underline; word-break: break-all;">$1</a>'
+      );
+    };
+
     if (!order) {
       return res.status(404).send(`
         <!DOCTYPE html>
@@ -268,7 +287,7 @@ app.get('/order/:orderId', async (req, res) => {
           .details-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 10px;
             font-size: 14px;
             padding: 6px 0;
@@ -279,12 +298,16 @@ app.get('/order/:orderId', async (req, res) => {
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+            padding-top: 2px;
           }
           .details-value {
             font-weight: 600;
             text-align: right;
             max-width: 65%;
             color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: break-word;
           }
           .invoice-table {
             width: 100%;
@@ -458,23 +481,23 @@ app.get('/order/:orderId', async (req, res) => {
             <div class="card-title">Customer details</div>
             <div class="details-row">
               <span class="details-label">Name</span>
-              <span class="details-value">${order.customerName}</span>
+              <span class="details-value">${escapeHtml(order.customerName)}</span>
             </div>
             <div class="details-row">
               <span class="details-label">Mobile</span>
-              <span class="details-value">${order.customerMobile}</span>
+              <span class="details-value">${escapeHtml(order.customerMobile)}</span>
             </div>
             <div class="details-row">
               <span class="details-label">Address</span>
-              <span class="details-value">${order.customerAddress}</span>
+              <span class="details-value">${formatAddress(order.customerAddress)}</span>
             </div>
             <div class="details-row">
               <span class="details-label">Order Date</span>
-              <span class="details-value">${formattedDate}</span>
+              <span class="details-value">${escapeHtml(formattedDate)}</span>
             </div>
             <div class="details-row">
               <span class="details-label">Order ID</span>
-              <span class="details-value" style="font-family: monospace; font-size: 12px; color: var(--gold-light);">${order.orderId}</span>
+              <span class="details-value" style="font-family: monospace; font-size: 12px; color: var(--gold-light);">${escapeHtml(order.orderId)}</span>
             </div>
           </div>
 

@@ -874,3 +874,169 @@ input:checked + .slider:before {
   text-transform: uppercase;
 }
 
+/* =========================================
+   MOBILE RESPONSIVE ADMIN PANEL
+   ========================================= */
+
+/* Default: show desktop table, hide mobile cards */
+.admin-orders-desktop { display: block; }
+.admin-orders-mobile  { display: none;  }
+.admin-mobile-nav     { display: none;  }
+
+/* ---- Mobile Order Cards ---- */
+.order-mobile-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease;
+}
+.order-mobile-card:active { border-color: var(--gold); }
+
+.order-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 8px;
+}
+.order-mobile-id {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--gold-light);
+  font-weight: 700;
+  word-break: break-all;
+  flex: 1;
+}
+.order-mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.order-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+.order-mobile-label {
+  color: var(--text-muted);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.order-mobile-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  max-width: 60%;
+}
+
+/* ---- Mobile Bottom Tab Nav ---- */
+.admin-mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 50px;
+  text-align: center;
+}
+.admin-mobile-nav-btn .nav-icon { font-size: 20px; line-height: 1; }
+.admin-mobile-nav-btn.active { color: var(--gold-light); background-color: var(--gold-glow); }
+.admin-mobile-nav-btn:active { transform: scale(0.92); }
+
+@media (max-width: 768px) {
+  /* Switch order list views */
+  .admin-orders-desktop { display: none;  }
+  .admin-orders-mobile  { display: block; }
+
+  /* Reveal bottom nav */
+  .admin-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-default);
+    z-index: 1000;
+    padding: 6px 4px;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  }
+
+  /* Stack layout, hide sidebar */
+  .admin-layout {
+    flex-direction: column;
+    padding-bottom: 70px;
+  }
+  .admin-sidebar { display: none; }
+
+  /* Full-width content */
+  .admin-main {
+    padding: 16px 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Header */
+  .admin-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+  .admin-header h2 { font-size: 20px; }
+
+  /* Stat cards — 2-column grid */
+  .admin-cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .admin-card { padding: 14px !important; }
+  .admin-card p { font-size: 22px !important; }
+
+  /* Modal slides up from bottom */
+  .admin-modal-backdrop { align-items: flex-end !important; }
+  .admin-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 92vh !important;
+  }
+  .admin-modal-body {
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Allow horizontal scroll on other tables (menu, coupons, etc.) */
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
