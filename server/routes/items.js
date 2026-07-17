@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import Item from '../models/Item.js';
 import Settings from '../models/Settings.js';
 import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -21,6 +22,17 @@ const autoSeed = async () => {
     }
     const rawData = fs.readFileSync(itemsJsonPath, 'utf-8');
     const parsedData = JSON.parse(rawData);
+
+    // Seed Admin User if empty
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      const adminUser = new User({
+        email: 'admin@moodfresher.com',
+        password: 'admin123',
+      });
+      await adminUser.save();
+      console.log('Auto-seeded default admin user.');
+    }
 
     // Seed Settings if empty
     const settingsCount = await Settings.countDocuments();
@@ -85,6 +97,19 @@ router.get('/', async (req, res) => {
     const itemsCount = await Item.countDocuments();
     if (process.env.USE_HARDCODED_ITEMS === 'true' && itemsCount === 0) {
       await autoSeed();
+    }
+
+    // Safety check: ensure admin user exists if USE_HARDCODED_ITEMS is enabled
+    if (process.env.USE_HARDCODED_ITEMS === 'true') {
+      const userCount = await User.countDocuments();
+      if (userCount === 0) {
+        const adminUser = new User({
+          email: 'admin@moodfresher.com',
+          password: 'admin123',
+        });
+        await adminUser.save();
+        console.log('Safety check: Auto-seeded default admin user.');
+      }
     }
 
     const items = await Item.find({}).sort({ category: 1, id: 1 });
