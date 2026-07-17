@@ -12,8 +12,14 @@ import settingsRoutes from './routes/settings.js';
 import uploadRoutes from './routes/upload.js';
 import cartRoutes from './routes/cart.js';
 
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Load env vars
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, './.env') });
 
 // Connect to database
 connectDB();

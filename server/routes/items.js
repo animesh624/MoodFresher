@@ -1,27 +1,16 @@
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import Item from '../models/Item.js';
 import Settings from '../models/Settings.js';
 import Coupon from '../models/Coupon.js';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
+import itemsData from '../../src/data/items.json' assert { type: 'json' };
 
 const router = express.Router();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const autoSeed = async () => {
   try {
-    const itemsJsonPath = path.resolve(__dirname, '../../src/data/items.json');
-    if (!fs.existsSync(itemsJsonPath)) {
-      console.warn(`items.json not found at ${itemsJsonPath}, skipping auto-seed`);
-      return;
-    }
-    const rawData = fs.readFileSync(itemsJsonPath, 'utf-8');
-    const parsedData = JSON.parse(rawData);
+    const parsedData = itemsData;
 
     // Seed Admin User if empty
     const userCount = await User.countDocuments();
