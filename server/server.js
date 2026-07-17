@@ -104,17 +104,27 @@ app.get('/order/:orderId', async (req, res) => {
         <!-- Admin redirect: if logged in as admin, redirect to admin dashboard for this order -->
         <script>
           (function() {
+            var ORDER_ID = '${order.orderId}';
+            console.log('%c[MF Step 1] Order page loaded', 'color:#d4a24c;font-weight:bold', 'orderId:', ORDER_ID);
             try {
               var adminToken = localStorage.getItem('adminToken');
+              console.log('%c[MF Step 2] localStorage check', 'color:#d4a24c;font-weight:bold',
+                'adminToken present:', !!adminToken,
+                adminToken ? '(length=' + adminToken.length + ', starts=' + adminToken.substring(0,10) + '...)' : '(null)'
+              );
               if (adminToken) {
-                // Admin is logged in - redirect to admin dashboard for this order
-                window.location.replace('/?admin_order=${order.orderId}');
+                var redirectUrl = '/?admin_order=' + ORDER_ID;
+                console.log('%c[MF Step 3] Admin detected - redirecting to:', 'color:#4ade80;font-weight:bold', redirectUrl);
+                window.location.replace(redirectUrl);
+              } else {
+                console.log('%c[MF Step 3] No admin token - showing customer view', 'color:#a0a0b8;font-weight:bold');
               }
             } catch(e) {
-              // localStorage not available (e.g. private mode), show normal page
+              console.error('[MF] localStorage error (private mode?):', e);
             }
           })();
         </script>
+
         
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
         

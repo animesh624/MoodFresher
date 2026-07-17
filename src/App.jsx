@@ -212,8 +212,21 @@ function AppContent() {
   const [view, setView] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search)
-      if (params.get('admin_order') && localStorage.getItem('adminToken')) return 'admin'
-    } catch (e) {}
+      const adminOrder = params.get('admin_order')
+      const token = localStorage.getItem('adminToken')
+      console.log('%c[MF Step 4] React SPA init - view state', 'color:#d4a24c;font-weight:bold',
+        '| URL:', window.location.href,
+        '| admin_order param:', adminOrder,
+        '| adminToken in LS:', token ? 'YES (len=' + token.length + ')' : 'NO'
+      )
+      if (adminOrder && token) {
+        console.log('%c[MF Step 4] -> Initializing as ADMIN view', 'color:#4ade80;font-weight:bold')
+        return 'admin'
+      }
+      console.log('%c[MF Step 4] -> Initializing as MENU view', 'color:#a0a0b8;font-weight:bold')
+    } catch (e) {
+      console.error('[MF] view initializer error:', e)
+    }
     return 'menu'
   })
   const [exploreMenu, setExploreMenu] = useState(false)
@@ -236,8 +249,18 @@ function AppContent() {
   const [adminView, setAdminView] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search)
-      if (params.get('admin_order') && localStorage.getItem('adminToken')) return 'orders'
-    } catch (e) {}
+      const adminOrder = params.get('admin_order')
+      const token = localStorage.getItem('adminToken')
+      console.log('%c[MF Step 5] React SPA init - adminView state', 'color:#d4a24c;font-weight:bold',
+        '| admin_order:', adminOrder, '| has token:', !!token
+      )
+      if (adminOrder && token) {
+        console.log('%c[MF Step 5] -> Initializing adminView as ORDERS', 'color:#4ade80;font-weight:bold')
+        return 'orders'
+      }
+    } catch (e) {
+      console.error('[MF] adminView initializer error:', e)
+    }
     return 'dashboard'
   })
   const [adminEmail, setAdminEmail] = useState('')
@@ -390,32 +413,49 @@ function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const adminOrderId = params.get('admin_order')
-    if (!adminOrderId) return
+    console.log('%c[MF Step 6] Deep-link useEffect fired', 'color:#d4a24c;font-weight:bold',
+      '| admin_order:', adminOrderId,
+      '| current URL:', window.location.href
+    )
+    if (!adminOrderId) {
+      console.log('[MF Step 6] No admin_order param, skipping deep-link logic')
+      return
+    }
 
     // Clean URL without reload
     window.history.replaceState({}, '', window.location.pathname)
+    console.log('[MF Step 6] URL cleaned to:', window.location.pathname)
 
     const storedToken = localStorage.getItem('adminToken')
+    console.log('[MF Step 6] storedToken from localStorage:', storedToken ? 'FOUND (len=' + storedToken.length + ')' : 'NOT FOUND')
     if (!storedToken) return
 
     // Fetch orders and open the specific order modal
     const loadAndFocusOrder = async () => {
+      console.log('%c[MF Step 7] Fetching /api/orders...', 'color:#d4a24c;font-weight:bold')
       try {
         const res = await fetch('/api/orders', {
           headers: { 'Authorization': `Bearer ${storedToken}` }
         })
+        console.log('[MF Step 7] /api/orders response status:', res.status, res.statusText)
         if (!res.ok) {
+          console.error('[MF Step 7] Token rejected or error! Clearing adminToken and going to menu.')
           localStorage.removeItem('adminToken')
           setAdminToken(null)
           setView('menu')
           return
         }
         const orders = await res.json()
+        console.log('[MF Step 7] Orders fetched:', Array.isArray(orders) ? orders.length : 'NOT ARRAY', 'orders')
         setAdminOrders(Array.isArray(orders) ? orders : [])
         const target = Array.isArray(orders) ? orders.find(o => o.orderId === adminOrderId) : null
+        console.log('[MF Step 7] Looking for orderId:', adminOrderId, '| Found:', target ? 'YES ✅' : 'NO ❌')
+        if (!target) {
+          console.log('[MF Step 7] Available orderIds:', Array.isArray(orders) ? orders.map(o => o.orderId) : [])
+        }
         if (target) setSelectedAdminOrder(target)
       } catch (err) {
-        console.error('Failed to load admin order from deep link', err)
+        console.error('[MF Step 7] fetch error:', err)
       }
     }
     loadAndFocusOrder()
