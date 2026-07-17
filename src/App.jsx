@@ -1541,9 +1541,32 @@ function AppContent() {
   const renderCustomerView = () => {
     if (loading) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary)' }}>
-          <div className="loader" style={{ border: '4px solid var(--border-default)', borderTop: '4px solid var(--gold)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
-          <p>Loading MoodFresher Delicious Menu...</p>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'var(--bg-primary)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-display)'
+        }}>
+          <div className="loader-spinner" style={{
+            border: '4px solid rgba(212, 162, 76, 0.1)',
+            borderTop: '4px solid var(--gold)',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '20px'
+          }}></div>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--gold-light)', margin: 0 }}>MoodFresher</h3>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '8px' }}>Loading delicious dishes...</p>
         </div>
       )
     }
@@ -1867,10 +1890,18 @@ function AppContent() {
                 )}
               </div>
               <div className="bottom-bar">
-                <div className="bottom-bar-left">
-                  <span className="bottom-bar-count">{cartCount} item{cartCount > 1 ? 's' : ''}</span>
-                  <span className="bottom-bar-total">₹{total}</span>
-                  {discountAmount > 0 && <span className="bottom-bar-discount">saved ₹{discountAmount}</span>}
+                <div className="bottom-bar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span key={`count-${cartCount}`} className="bottom-bar-count" style={{ display: 'inline-block', animation: 'countBounce 0.3s ease' }}>
+                    {cartCount} item{cartCount > 1 ? 's' : ''}
+                  </span>
+                  <span key={`total-${total}`} className="bottom-bar-total" style={{ display: 'inline-block', animation: 'countBounce 0.3s ease' }}>
+                    ₹{total}
+                  </span>
+                  {discountAmount > 0 && (
+                    <span key={`saved-${discountAmount}`} className="bottom-bar-discount" style={{ display: 'inline-block', animation: 'countBounce 0.3s ease' }}>
+                      saved ₹{discountAmount}
+                    </span>
+                  )}
                 </div>
                 <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
                   View Cart →
