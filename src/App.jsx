@@ -1598,17 +1598,17 @@ function AppContent() {
           <>
             <section className="hero-banner">
               <div className="hero-content">
-                <span className="hero-veg-badge">🟢 100% VEG</span>
-                <h2>Delicious Food, Delivered Fresh!</h2>
-                <p className="hero-subtitle">Order Direct & Save More — No Middlemen, Just Great Food</p>
+                <span className="hero-veg-badge">🟢 100% PURE VEGETARIAN</span>
+                <h2>Heavenly Veg Delights, Crafted for True Foodies!</h2>
+                <p className="hero-subtitle">From sizzling tikkas & rich authentic curries to crispy golden waffles, enjoy premium taste cooked fresh daily.</p>
                 <div className="hero-trust-row">
-                  <span className="hero-trust-item">🏷️ Better Prices</span>
-                  <span className="hero-trust-item">🍳 Freshly Prepared</span>
-                  <span className="hero-trust-item">✅ Hygienic Food</span>
-                  <span className="hero-trust-item">🚗 Fast Delivery</span>
+                  <span className="hero-trust-item">🏷️ Direct Savings</span>
+                  <span className="hero-trust-item">🌱 100% Pure Veg</span>
+                  <span className="hero-trust-item">🍳 Fresh & Hygenic</span>
+                  <span className="hero-trust-item">🔥 Piping Hot Delivery</span>
                 </div>
                 <div className="hero-actions">
-                  <button className="hero-btn-primary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Explore Menu</button>
+                  <button className="hero-btn-primary" onClick={() => { const el = document.querySelector('.category-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}>Taste the Magic</button>
                 </div>
               </div>
             </section>
@@ -1617,7 +1617,7 @@ function AppContent() {
             {banners.length > 0 && (
               <section className="offers-carousel-section">
                 <div className="section-header">
-                  <h4>🔥 Special Offers for You</h4>
+                  <h4>🔥 Today's Exclusive Foodie Deals</h4>
                 </div>
                 <div className="offers-grid">
                   {banners.map(banner => (
@@ -1645,22 +1645,22 @@ function AppContent() {
               <div className="promo-card promo-green">
                 <span className="promo-icon">🚚</span>
                 <div className="promo-text">
-                  <div className="promo-title">FREE DELIVERY</div>
-                  <div className="promo-sub">Within 3 km • ₹10/km beyond</div>
+                  <div className="promo-title">PIPING HOT DELIVERY</div>
+                  <div className="promo-sub">Free within 3 km • ₹10/km beyond</div>
                 </div>
               </div>
               <div className="promo-card promo-gold">
                 <span className="promo-icon">💰</span>
                 <div className="promo-text">
-                  <div className="promo-title">BEST PRICES</div>
-                  <div className="promo-sub">Order direct & save more</div>
+                  <div className="promo-title">PURE FOODIE SAVINGS</div>
+                  <div className="promo-sub">Zero markups, direct from our kitchen</div>
                 </div>
               </div>
               <div className="promo-card promo-orange">
                 <span className="promo-icon">🎉</span>
                 <div className="promo-text">
-                  <div className="promo-title">PARTIES & MARRIAGE</div>
-                  <div className="promo-sub">Bulk orders from 50+ plates</div>
+                  <div className="promo-title">FESTIVE VEG FEASTS</div>
+                  <div className="promo-sub">Catering & bulk orders from 50+ plates</div>
                 </div>
               </div>
             </section>
