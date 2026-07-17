@@ -203,6 +203,7 @@ function AppContent() {
   const [location, setLocation] = useState(null)
   const [placingOrder, setPlacingOrder] = useState(false)
   const [placedOrder, setPlacedOrder] = useState(null)
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false)
   const [locating, setLocating] = useState(false)
   const [deliveryDistance, setDeliveryDistance] = useState(null)
   const [activeCat, setActiveCat] = useState('All')
@@ -639,6 +640,30 @@ function AppContent() {
     }
   }, [activeTier, subtotal])
 
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser.')
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        const dist = haversineDistance(RESTAURANT_LAT, RESTAURANT_LNG, lat, lng)
+        setDeliveryDistance(dist * ROAD_DISTANCE_MULTIPLIER)
+        setLocation(`https://maps.google.com/?q=${lat},${lng}`)
+        setLocating(false)
+        toast.success('Location shared successfully!')
+      },
+      (err) => {
+        toast.error('Could not get your location. Please enable location access and try again.')
+        setLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
   const scrollToOrderPanel = () => {
     if (orderPanelRef.current) {
       orderPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -973,7 +998,13 @@ function AppContent() {
       toast.success('Order placed successfully in our system!')
       
       // Auto open WhatsApp Link
-      const waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
+      let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
+      if (savedOrder.imageUrl) {
+        waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
+      }
+      if (location) {
+        waMsg += `\n\n📍 Live Location: ${location}`;
+      }
       const encodedMsg = encodeURIComponent(waMsg)
       window.open(`https://wa.me/${whatsappNumber}?text=${encodedMsg}`, '_blank')
 
@@ -1636,29 +1667,7 @@ function AppContent() {
         <textarea placeholder="Delivery instructions (optional)" value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} disabled={!isOpen} />
         <button
           className={`loc-btn ${location ? 'shared' : ''}`}
-          onClick={() => {
-            if (!navigator.geolocation) {
-              toast.error('Geolocation is not supported by your browser.')
-              return
-            }
-            setLocating(true)
-            navigator.geolocation.getCurrentPosition(
-              (pos) => {
-                const lat = pos.coords.latitude
-                const lng = pos.coords.longitude
-                const dist = haversineDistance(RESTAURANT_LAT, RESTAURANT_LNG, lat, lng)
-                setDeliveryDistance(dist * ROAD_DISTANCE_MULTIPLIER)
-                setLocation(`https://maps.google.com/?q=${lat},${lng}`)
-                setLocating(false)
-                toast.success('Location shared successfully!')
-              },
-              (err) => {
-                toast.error('Could not get your location. Please enable location access and try again.')
-                setLocating(false)
-              },
-              { enableHighAccuracy: true, timeout: 10000 }
-            )
-          }}
+          onClick={getUserLocation}
           disabled={!isOpen || locating}
         >
           {locating ? '📍 Getting location...' : location ? '📍 Location shared ✓' : '📍 Share live location'}
@@ -1672,27 +1681,36 @@ function AppContent() {
         </div>
       )}
       <button
-        className={`place-btn ${canPlace ? 'enabled' : 'disabled'}`}
-        onClick={canPlace ? placeOrder : () => {
+        className="place-btn enabled"
+        onClick={() => {
+          if (orderLines.length === 0) {
+            toast.error('Your cart is empty. Please add items to order.')
+            return
+          }
+          if (!meetsMinOrder) {
+            toast.error(`Minimum order amount is ₹${minOrderAmount}. Please add items worth ₹${shortfallMin} more.`)
+            return
+          }
           if (deliveryDistance != null && !isDeliverable) {
             toast.error(`Sorry for the inconvenience, we do not deliver beyond ${maxDeliveryDistance} km.`)
-          } else if (!meetsMinOrder) {
-            toast.error(`Minimum order amount is ₹${minOrderAmount}. Please add items worth ₹${shortfallMin} more.`)
-            scrollToOrderPanel()
+            return
+          }
+          
+          const hasDetails = name.trim() && mobile.trim() && address.trim()
+          if (!hasDetails) {
+            setDetailsModalOpen(true)
           } else {
-            toast.error('Please enter name, address and select at least one item before placing the order.')
+            placeOrder()
           }
         }}
         disabled={false}
       >
-        {!meetsMinOrder ? `Min ₹${minOrderAmount} order` : (deliveryDistance != null && !isDeliverable) ? '🚫 Out of Delivery Range' : canPlace ? (
-          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            Place order
-          </div>
-        ) : 'Enter details & location to order'}
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Place order
+        </div>
       </button>
     </>
   )
@@ -2179,7 +2197,14 @@ function AppContent() {
                     </span>
                   )}
                 </div>
-                <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
+                <button className="bottom-bar-btn" onClick={() => {
+                  const hasDetails = name.trim() && mobile.trim() && address.trim()
+                  if (!hasDetails) {
+                    setDetailsModalOpen(true)
+                  } else {
+                    scrollToOrderPanel()
+                  }
+                }}>
                   View Cart →
                 </button>
               </div>
@@ -2260,7 +2285,13 @@ function AppContent() {
 
                 <div className="closed-actions" style={{ width: '100%', flexDirection: 'column', gap: '10px' }}>
                   <button className="wa-btn" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
-                    const waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${placedOrder.orderId}\nTotal: ₹${placedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${placedOrder.orderId}`;
+                    let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${placedOrder.orderId}\nTotal: ₹${placedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${placedOrder.orderId}`;
+                    if (placedOrder.imageUrl) {
+                      waMsg += `\n\nSecure Invoice Image: ${placedOrder.imageUrl}`;
+                    }
+                    if (location) {
+                      waMsg += `\n\n📍 Live Location: ${location}`;
+                    }
                     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMsg)}`, '_blank');
                   }}>
                     💬 Confirm on WhatsApp
@@ -2276,6 +2307,103 @@ function AppContent() {
                     Close
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customer Details Entry Modal */}
+          {detailsModalOpen && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(5, 5, 10, 0.85)',
+              backdropFilter: 'blur(12px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10000,
+              padding: '20px'
+            }}>
+              <div className="shop-closed-card" style={{ maxWidth: '440px', padding: '36px 28px', animation: 'modalScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', display: 'flex', flexDirection: 'column', alignItems: 'stretch', textAlign: 'left' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '12px' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '800', color: 'var(--gold-light)', margin: 0 }}>Delivery Information</h3>
+                  <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '24px', cursor: 'pointer', padding: 0, lineHeight: 1 }} onClick={() => setDetailsModalOpen(false)}>&times;</button>
+                </div>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setDetailsModalOpen(false);
+                  placeOrder();
+                }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Your Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%' }}
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Mobile Number</label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%' }}
+                      placeholder="Enter mobile number"
+                      value={mobile}
+                      onChange={e => setMobile(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Delivery Address</label>
+                    <textarea
+                      className="form-control"
+                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%', resize: 'none' }}
+                      placeholder="Flat/House No., Building Name, Street Address, Area"
+                      rows={3}
+                      value={address}
+                      onChange={e => setAddress(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Delivery Instructions (Optional)</label>
+                    <textarea
+                      className="form-control"
+                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%', resize: 'none' }}
+                      placeholder="e.g. Ring the bell, keep near gate, etc."
+                      rows={2}
+                      value={instructions}
+                      onChange={e => setInstructions(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ margin: '4px 0' }}>
+                    <button
+                      type="button"
+                      className={`loc-btn ${location ? 'shared' : ''}`}
+                      onClick={getUserLocation}
+                      disabled={locating}
+                      style={{ width: '100%' }}
+                    >
+                      {locating ? '📍 Getting location...' : location ? '📍 Location shared ✓' : '📍 Share live location'}
+                    </button>
+                  </div>
+
+                  <button type="submit" className="admin-btn admin-btn-primary" style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))', color: 'var(--bg-primary)', border: 'none', padding: '14px', borderRadius: '30px', fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', cursor: 'pointer', width: '100%', marginTop: '8px', justifyContent: 'center' }}>
+                    Confirm & Place Order
+                  </button>
+
+                </form>
               </div>
             </div>
           )}
