@@ -366,6 +366,43 @@
   color: var(--red);
 }
 
+/* Status colors for orders */
+.admin-badge.status-pending {
+  background-color: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+  border: 1px solid rgba(255, 149, 0, 0.3);
+}
+
+.admin-badge.status-accepted {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+  border: 1px solid rgba(0, 122, 255, 0.3);
+}
+
+.admin-badge.status-rejected {
+  background-color: rgba(255, 77, 79, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(255, 77, 79, 0.3);
+}
+
+.admin-badge.status-preparing {
+  background-color: rgba(212, 162, 76, 0.15);
+  color: var(--gold-light);
+  border: 1px solid rgba(212, 162, 76, 0.3);
+}
+
+.admin-badge.status-outfordelivery {
+  background-color: rgba(175, 82, 222, 0.15);
+  color: #af52de;
+  border: 1px solid rgba(175, 82, 222, 0.3);
+}
+
+.admin-badge.status-completed {
+  background-color: rgba(37, 211, 102, 0.15);
+  color: var(--green-light);
+  border: 1px solid rgba(37, 211, 102, 0.3);
+}
+
 /* Modals & Forms overlays */
 .admin-modal-backdrop {
   position: fixed;

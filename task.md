@@ -1,0 +1,38 @@
+# Task List — Backend Compatibility & Admin Dashboard
+
+- [x] Initialize Express backend in `server/` directory and install dependencies
+- [x] Create MongoDB models (`User`, `Item`, `Coupon`, `OfferBanner`, `Settings`)
+- [x] Implement backend auth, item, coupon, banner, settings, and upload API routes
+- [x] Create and run MongoDB seeder script (`seed.js`) using `items.json`
+- [x] Configure Vite proxy to point `/api` to Express backend (port 5000)
+- [x] Connect React frontend (`src/App.jsx`) to API endpoints for items, settings, and banners
+- [x] Add customer coupon code validation & checkout functionality on customer side
+- [x] Create Admin Dashboard UI & login system in frontend under state-based router
+- [x] Create MongoDB Cart model (`server/models/Cart.js`)
+- [x] Create Cart API routes (`server/routes/cart.js`)
+- [x] Register cart route in `server/server.js`
+- [x] Generate customer sessionId and sync frontend cart quantities & applied coupons with DB
+- [x] Remove visible admin entry links from customer views in `src/App.jsx`
+- [x] Clean browser scrollbars and polish modal/input transitions
+- [x] Configure Vercel static build routes and serverless API settings
+- [x] Manual verification and testing (cart syncing, coupon validation, hidden admin routing)
+- [x] Add weight, breakdown, and original price fields to Mongoose `Item` schema
+- [x] Add indexing to Mongoose `Item` and `OfferBanner` schemas for database query tuning
+- [x] Update backend API routes to receive, validate, and save portion & pricing fields
+- [x] Restructure frontend promotional banner slider to stretch horizontally full screen
+- [x] Update frontend menu card elements to display weight badge, breakdowns, and discounted/crossed-out pricing
+- [x] Add weight, breakdown, and original pricing fields to Admin Dashboard edit/add item modals
+- [x] Add explanatory helper text to Coupon modal for unconditional special coupons
+- [x] Fix static loading spinner and center overlay layout
+- [x] Add fail-safe env loading to bypass .env files checking in production (Vercel)
+- [x] Add spring pop countBounce animation to bottom-bar items on cart updates
+- [x] Revamp shop closed overlay UI using glassmorphic cards and stacked actions
+- [x] Create MongoDB Order model (`server/models/Order.js`)
+- [x] Create backend Order API routes (`server/routes/orders.js`)
+- [x] Register Order routes and setup dynamic SSR status route (`app.get('/order/:orderId')`) in `server/server.js`
+- [x] Add vercel.json rewrite rule for `/order/(.*)`
+- [x] Implement client-side invoice Canvas rendering and image upload in `src/App.jsx`
+- [x] Integrate database checkout saving and WhatsApp redirection in `src/App.jsx`
+- [x] Build Admin Dashboard "Orders" tab, table, detail modal, and status update actions in `src/App.jsx`
+- [x] Add style definitions for orders tab, status badges, and status dropdowns in `src/Admin.css`
+- [x] Verify checkout, canvas image upload, WhatsApp preview card, and admin status updates

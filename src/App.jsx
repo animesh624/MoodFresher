@@ -201,6 +201,8 @@ function AppContent() {
   const [mobile, setMobile] = useState('')
   const [instructions, setInstructions] = useState('')
   const [location, setLocation] = useState(null)
+  const [placingOrder, setPlacingOrder] = useState(false)
+  const [placedOrder, setPlacedOrder] = useState(null)
   const [locating, setLocating] = useState(false)
   const [deliveryDistance, setDeliveryDistance] = useState(null)
   const [activeCat, setActiveCat] = useState('All')
@@ -232,6 +234,9 @@ function AppContent() {
   // Admin entities lists
   const [adminCoupons, setAdminCoupons] = useState([])
   const [adminBanners, setAdminBanners] = useState([])
+  const [adminOrders, setAdminOrders] = useState([])
+  const [adminOrdersLoading, setAdminOrdersLoading] = useState(false)
+  const [selectedAdminOrder, setSelectedAdminOrder] = useState(null)
 
   // Admin Item Edit/Create Modal states
   const [itemModalOpen, setItemModalOpen] = useState(false)
@@ -416,15 +421,20 @@ function AppContent() {
   // Fetch Admin Specific Data
   const fetchAdminData = async () => {
     if (!adminToken) return
+    setAdminOrdersLoading(true)
     try {
-      const [couponsRes, bannersRes] = await Promise.all([
+      const [couponsRes, bannersRes, ordersRes] = await Promise.all([
         fetch('/api/coupons', { headers: { 'Authorization': `Bearer ${adminToken}` } }).then(r => r.json()),
-        fetch('/api/banners/all', { headers: { 'Authorization': `Bearer ${adminToken}` } }).then(r => r.json())
+        fetch('/api/banners/all', { headers: { 'Authorization': `Bearer ${adminToken}` } }).then(r => r.json()),
+        fetch('/api/orders', { headers: { 'Authorization': `Bearer ${adminToken}` } }).then(r => r.json())
       ])
-      setAdminCoupons(couponsRes)
-      setAdminBanners(bannersRes)
+      setAdminCoupons(Array.isArray(couponsRes) ? couponsRes : [])
+      setAdminBanners(Array.isArray(bannersRes) ? bannersRes : [])
+      setAdminOrders(Array.isArray(ordersRes) ? ordersRes : [])
     } catch (err) {
       console.error(err)
+    } finally {
+      setAdminOrdersLoading(false)
     }
   }
 
@@ -692,8 +702,176 @@ function AppContent() {
     toast.info('Coupon removed')
   }
 
-  // Checkout redirect
-  const placeOrder = () => {
+  const generateInvoiceCanvas = (orderId, orderDetails) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Draw Background
+      ctx.fillStyle = '#0a0a0f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Card Container outline
+      ctx.strokeStyle = '#d4a24c';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+
+      // Inner Card fills
+      ctx.fillStyle = '#14141e';
+      ctx.fillRect(30, 30, canvas.width - 60, 940);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(30, 30, canvas.width - 60, 940);
+
+      // Header Brand
+      ctx.fillStyle = '#f0c86a';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('MoodFresher', canvas.width / 2, 85);
+
+      ctx.fillStyle = '#6b6b82';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('100% PURE VEGETARIAN CAFE & RESTAURANT', canvas.width / 2, 115);
+
+      // Divider
+      ctx.strokeStyle = 'rgba(212, 162, 76, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(50, 135);
+      ctx.lineTo(canvas.width - 50, 135);
+      ctx.stroke();
+
+      // Details Left Aligned
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#f1f1f7';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`ORDER ID: ${orderId}`, 60, 180);
+
+      ctx.font = '14px sans-serif';
+      ctx.fillStyle = '#a0a0b8';
+      ctx.fillText(`Date: ${new Date().toLocaleString()}`, 60, 210);
+      ctx.fillText(`Customer Name: ${orderDetails.customerName}`, 60, 240);
+      ctx.fillText(`Mobile: ${orderDetails.customerMobile}`, 60, 270);
+      
+      // Wrap Address Text
+      ctx.fillText('Delivery Address:', 60, 300);
+      ctx.fillStyle = '#f1f1f7';
+      const addressWords = orderDetails.customerAddress.split(' ');
+      let addressLine = '';
+      let addressY = 325;
+      addressWords.forEach(word => {
+        const testLine = addressLine + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 680) {
+          ctx.fillText(addressLine, 60, addressY);
+          addressLine = word + ' ';
+          addressY += 22;
+        } else {
+          addressLine = testLine;
+        }
+      });
+      ctx.fillText(addressLine, 60, addressY);
+
+      // Table Header Y starts after address
+      let tableY = addressY + 40;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(50, tableY);
+      ctx.lineTo(canvas.width - 50, tableY);
+      ctx.stroke();
+
+      tableY += 25;
+      ctx.fillStyle = '#6b6b82';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('ITEM DESCRIPTION', 60, tableY);
+      ctx.textAlign = 'center';
+      ctx.fillText('QTY', 520, tableY);
+      ctx.textAlign = 'right';
+      ctx.fillText('PRICE', 740, tableY);
+
+      tableY += 15;
+      ctx.beginPath();
+      ctx.moveTo(50, tableY);
+      ctx.lineTo(canvas.width - 50, tableY);
+      ctx.stroke();
+
+      // Draw Items
+      ctx.fillStyle = '#f1f1f7';
+      ctx.font = '14px sans-serif';
+      orderDetails.items.forEach(item => {
+        tableY += 30;
+        ctx.textAlign = 'left';
+        ctx.fillText(item.name, 60, tableY);
+        ctx.textAlign = 'center';
+        ctx.fillText(item.qty.toString(), 520, tableY);
+        ctx.textAlign = 'right';
+        ctx.fillText(`₹${item.qty * item.price}`, 740, tableY);
+      });
+
+      tableY += 20;
+      ctx.beginPath();
+      ctx.moveTo(50, tableY);
+      ctx.lineTo(canvas.width - 50, tableY);
+      ctx.stroke();
+
+      // Calculations Y
+      tableY += 30;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#a0a0b8';
+      ctx.fillText('Subtotal', 480, tableY);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#f1f1f7';
+      ctx.fillText(`₹${orderDetails.subtotal}`, 740, tableY);
+
+      if (orderDetails.discount > 0) {
+        tableY += 25;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#a0a0b8';
+        ctx.fillText(`Discount ${orderDetails.couponCode ? `(${orderDetails.couponCode})` : ''}`, 480, tableY);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#4ade80';
+        ctx.fillText(`-₹${orderDetails.discount}`, 740, tableY);
+      }
+
+      tableY += 25;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#a0a0b8';
+      ctx.fillText('Delivery Fee', 480, tableY);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#f1f1f7';
+      ctx.fillText(`₹${orderDetails.deliveryFee}`, 740, tableY);
+
+      // Grand Total
+      tableY += 35;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.beginPath();
+      ctx.moveTo(450, tableY - 15);
+      ctx.lineTo(750, tableY - 15);
+      ctx.stroke();
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#f0c86a';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('GRAND TOTAL', 480, tableY);
+      ctx.textAlign = 'right';
+      ctx.fillText(`₹${orderDetails.total}`, 740, tableY);
+
+      // Footer
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#6b6b82';
+      ctx.font = 'italic 14px sans-serif';
+      ctx.fillText('Thank you for ordering with MoodFresher!', canvas.width / 2, 930);
+      ctx.fillText('Crafted with love & 100% vegetarian ingredients.', canvas.width / 2, 950);
+
+      resolve(canvas);
+    });
+  };
+
+  // Checkout redirect and database placement
+  const placeOrder = async () => {
     if (!canPlace) {
       if (!meetsMinOrder) {
         toast.error(`Minimum order amount is ₹${minOrderAmount}. Please add items worth ₹${shortfallMin} more.`)
@@ -707,35 +885,104 @@ function AppContent() {
       return
     }
 
-    let msg = `Mood Fresher - New order from website\nName: ${name}\nMobile: ${mobile}\nAddress: ${address}\n\nItems:\n`
-    orderLines.forEach(it => {
-      msg += `${it.displayName} x ${it.qty} = ₹${it.lineTotal}\n`
-    })
-    msg += `\nSubtotal: ₹${subtotal}`
-    if (deliveryCharge > 0) {
-      const roundedKm = Math.round(deliveryDistance - FREE_DELIVERY_KM)
-      msg += `\nDelivery Charge (${roundedKm} km beyond ${FREE_DELIVERY_KM}km): ₹${deliveryCharge}`
-    } else if (deliveryDistance != null) {
-      msg += `\nDelivery Charge: Free`
-    }
+    setPlacingOrder(true)
     
-    if (discountAmount > 0) {
-      if (appliedCoupon) {
-        msg += `\nDiscount (Coupon ${appliedCoupon.code} - ${appliedCoupon.discountPercent}%): -₹${discountAmount}`
-      } else {
-        msg += `\nDiscount (${discountPercent}% OFF): -₹${discountAmount}`
-      }
-    }
-    msg += `\nTotal: ₹${total}`
+    // Build address and custom instructions info
+    let combinedAddress = address
     if (instructions && instructions.trim()) {
-      msg += `\n\nInstructions: ${instructions.trim()}`
+      combinedAddress += `\nInstructions: ${instructions.trim()}`
     }
     if (location) {
-      msg += `\n\n📍 Live Location: ${location}`
+      combinedAddress += `\nLive Location: ${location}`
     }
-    const encoded = encodeURIComponent(msg)
-    const waLink = `https://wa.me/${whatsappNumber}?text=${encoded}`
-    window.open(waLink, '_blank')
+
+    const orderPayload = {
+      customerName: name,
+      customerMobile: mobile,
+      customerAddress: combinedAddress,
+      items: orderLines.map(it => ({
+        name: it.displayName,
+        price: it.price,
+        qty: it.qty,
+        variant: it.variant || null
+      })),
+      subtotal,
+      discount: discountAmount,
+      deliveryFee: deliveryCharge,
+      total,
+      couponCode: appliedCoupon ? appliedCoupon.code : ''
+    }
+
+    try {
+      // 1. Save order in MongoDB
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      })
+      const savedOrder = await res.json()
+
+      if (!res.ok) {
+        throw new Error(savedOrder.message || 'Failed to place order')
+      }
+
+      // 2. Generate and upload Canvas Summary Image
+      const canvas = await generateInvoiceCanvas(savedOrder.orderId, orderPayload)
+      
+      await new Promise((resolveUpload, rejectUpload) => {
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            rejectUpload(new Error('Failed to create canvas blob'))
+            return
+          }
+          const formData = new FormData()
+          formData.append('image', blob, `invoice_${savedOrder.orderId}.png`)
+          
+          try {
+            const uploadRes = await fetch(`/api/orders/${savedOrder.orderId}/upload-summary`, {
+              method: 'POST',
+              body: formData
+            })
+            if (!uploadRes.ok) {
+              console.warn('Invoice image upload warning, relying on default status tracker.')
+            }
+            resolveUpload()
+          } catch (uploadErr) {
+            console.error('Invoice image upload error:', uploadErr)
+            resolveUpload() // Proceed anyway even if summary image fails
+          }
+        }, 'image/png')
+      })
+
+      // 3. Clear cart
+      setQuantities({})
+      setAppliedCoupon(null)
+      setCouponCode('')
+      try {
+        await fetch(`/api/cart/${sessionId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: [], couponCode: '' })
+        })
+      } catch (cartErr) {
+        console.error('Failed to clear cart in db:', cartErr)
+      }
+
+      // 4. Save placed order and open confirmation overlay
+      setPlacedOrder(savedOrder)
+      toast.success('Order placed successfully in our system!')
+      
+      // Auto open WhatsApp Link
+      const waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
+      const encodedMsg = encodeURIComponent(waMsg)
+      window.open(`https://wa.me/${whatsappNumber}?text=${encodedMsg}`, '_blank')
+
+    } catch (err) {
+      console.error(err)
+      toast.error(err.message || 'Network error placing order')
+    } finally {
+      setPlacingOrder(false)
+    }
   }
 
   const cartCount = orderLines.reduce((s, it) => s + it.qty, 0)
@@ -1099,6 +1346,35 @@ function AppContent() {
       }
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  /* ── Admin Orders Management ── */
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(`Order status updated to "${newStatus}"!`)
+        // Update local list
+        setAdminOrders(prev => prev.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o))
+        // Update selected order details
+        if (selectedAdminOrder && selectedAdminOrder.orderId === orderId) {
+          setSelectedAdminOrder({ ...selectedAdminOrder, status: newStatus })
+        }
+      } else {
+        toast.error(data.message || 'Failed to update order status')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Network error updating status')
     }
   }
 
@@ -1909,6 +2185,100 @@ function AppContent() {
               </div>
             </div>
           )}
+          
+          {/* Placing Order Loading Overlay */}
+          {placingOrder && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(5, 5, 10, 0.82)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10001,
+              color: 'var(--text-primary)'
+            }}>
+              <div className="loader-spinner" style={{
+                border: '4px solid rgba(212, 162, 76, 0.1)',
+                borderTop: '4px solid var(--gold)',
+                borderRadius: '50%',
+                width: '50px',
+                height: '50px',
+                animation: 'spin 1s linear infinite',
+                marginBottom: '20px'
+              }}></div>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--gold-light)', margin: 0 }}>MoodFresher</h3>
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '8px' }}>Securing your order & generating invoice...</p>
+            </div>
+          )}
+
+          {/* Placed Order Success Modal */}
+          {placedOrder && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(5, 5, 10, 0.85)',
+              backdropFilter: 'blur(12px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10000,
+              padding: '20px'
+            }}>
+              <div className="shop-closed-card" style={{ maxWidth: '440px', padding: '40px 32px', animation: 'modalScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span className="closed-icon" style={{
+                  background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(37, 211, 102, 0.02) 100%)',
+                  border: '1px solid rgba(37, 211, 102, 0.2)',
+                  color: '#25D366'
+                }}>🎉</span>
+                <h2 style={{ color: 'var(--gold-light)', fontSize: '22px', marginBottom: '12px' }}>Order Successfully Placed!</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6', marginBottom: '20px' }}>
+                  Your order has been saved. To confirm and place the order with our kitchen, please click <strong>"Confirm on WhatsApp"</strong> below.
+                </p>
+
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  width: '100%',
+                  marginBottom: '24px',
+                  textAlign: 'left',
+                  fontSize: '13px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Order ID:</span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--gold-light)' }}>{placedOrder.orderId}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Total Amount:</span>
+                    <span style={{ fontWeight: 'bold' }}>₹{placedOrder.total}</span>
+                  </div>
+                </div>
+
+                <div className="closed-actions" style={{ width: '100%', flexDirection: 'column', gap: '10px' }}>
+                  <button className="wa-btn" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
+                    const waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${placedOrder.orderId}\nTotal: ₹${placedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${placedOrder.orderId}`;
+                    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMsg)}`, '_blank');
+                  }}>
+                    💬 Confirm on WhatsApp
+                  </button>
+                  
+                  <button className="primary" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
+                    window.open(`/order/${placedOrder.orderId}`, '_blank');
+                  }}>
+                    📋 Track Live Status
+                  </button>
+                  
+                  <button className="secondary" style={{ width: '100%', padding: '12px 16px' }} onClick={() => setPlacedOrder(null)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -1977,6 +2347,7 @@ function AppContent() {
           </div>
           <nav className="admin-nav">
             <button className={`admin-nav-btn ${adminView === 'dashboard' ? 'active' : ''}`} onClick={() => setAdminView('dashboard')}>📊 Dashboard</button>
+            <button className={`admin-nav-btn ${adminView === 'orders' ? 'active' : ''}`} onClick={() => setAdminView('orders')}>📦 Orders</button>
             <button className={`admin-nav-btn ${adminView === 'menu' ? 'active' : ''}`} onClick={() => setAdminView('menu')}>🍽️ Manage Menu</button>
             <button className={`admin-nav-btn ${adminView === 'coupons' ? 'active' : ''}`} onClick={() => setAdminView('coupons')}>🏷️ Coupons</button>
             <button className={`admin-nav-btn ${adminView === 'banners' ? 'active' : ''}`} onClick={() => setAdminView('banners')}>🖼️ Offers & Banners</button>
@@ -2005,22 +2376,29 @@ function AppContent() {
                 </div>
               </div>
 
-              <div className="admin-dashboard-grid">
-                <div className="admin-card">
+              <div className="admin-dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+                <div className="admin-card" onClick={() => setAdminView('menu')} style={{ cursor: 'pointer' }}>
                   <div className="admin-card-icon" style={{ color: 'var(--gold)' }}>🍲</div>
                   <div className="admin-card-info">
                     <h4>Total Items</h4>
                     <p>{items.length}</p>
                   </div>
                 </div>
-                <div className="admin-card">
+                <div className="admin-card" onClick={() => setAdminView('orders')} style={{ cursor: 'pointer' }}>
+                  <div className="admin-card-icon" style={{ color: 'var(--orange)' }}>📦</div>
+                  <div className="admin-card-info">
+                    <h4>Total Orders</h4>
+                    <p>{adminOrders.length}</p>
+                  </div>
+                </div>
+                <div className="admin-card" onClick={() => setAdminView('coupons')} style={{ cursor: 'pointer' }}>
                   <div className="admin-card-icon" style={{ color: 'var(--green)' }}>🏷️</div>
                   <div className="admin-card-info">
                     <h4>Active Coupons</h4>
                     <p>{adminCoupons.filter(c => c.isActive).length}</p>
                   </div>
                 </div>
-                <div className="admin-card">
+                <div className="admin-card" onClick={() => setAdminView('banners')} style={{ cursor: 'pointer' }}>
                   <div className="admin-card-icon" style={{ color: 'var(--red)' }}>🖼️</div>
                   <div className="admin-card-info">
                     <h4>Active Banners</h4>
@@ -2039,6 +2417,72 @@ function AppContent() {
                   <button className="admin-btn admin-btn-secondary" onClick={() => setAdminView('settings')}>Edit Operating Hours</button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {adminView === 'orders' && (
+            <div>
+              <div className="admin-header">
+                <h2>Manage Orders</h2>
+                <button onClick={fetchAdminData} className="admin-btn admin-btn-secondary">
+                  🔄 Refresh List
+                </button>
+              </div>
+
+              {adminOrdersLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                  Loading orders list...
+                </div>
+              ) : adminOrders.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                  No orders have been placed yet.
+                </div>
+              ) : (
+                <div className="admin-table-container">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Mobile</th>
+                        <th>Items Count</th>
+                        <th>Total (₹)</th>
+                        <th>Status</th>
+                        <th>Order Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adminOrders.map(order => (
+                        <tr key={order._id}>
+                          <td style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--gold-light)' }}>
+                            {order.orderId}
+                          </td>
+                          <td style={{ fontWeight: 'bold' }}>{order.customerName}</td>
+                          <td>{order.customerMobile}</td>
+                          <td>{order.items.reduce((s, i) => s + i.qty, 0)}</td>
+                          <td style={{ fontWeight: 'bold' }}>₹{order.total}</td>
+                          <td>
+                            <span className={`admin-badge status-${order.status.toLowerCase()}`}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <button
+                              className="admin-btn admin-btn-secondary"
+                              style={{ padding: '4px 10px', fontSize: 12 }}
+                              onClick={() => setSelectedAdminOrder(order)}
+                            >
+                              Details / Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -2395,6 +2839,139 @@ function AppContent() {
             </div>
           )}
         </main>
+        {/* ── Admin Order Details Modal ── */}
+        {selectedAdminOrder && (
+          <div className="admin-modal-backdrop" onClick={() => setSelectedAdminOrder(null)}>
+            <div className="admin-modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+              <div className="admin-modal-header">
+                <h3>Order Details — {selectedAdminOrder.orderId}</h3>
+                <button className="admin-modal-close" onClick={() => setSelectedAdminOrder(null)}>&times;</button>
+              </div>
+              <div className="admin-modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', padding: '24px' }}>
+                
+                {/* Status Update section */}
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Current Status:</span>
+                    <div style={{ marginTop: '4px' }}>
+                      <span className={`admin-badge status-${selectedAdminOrder.status.toLowerCase()}`}>
+                        {selectedAdminOrder.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Update Status:</label>
+                    <select
+                      className="form-control"
+                      style={{ padding: '6px 12px', fontSize: 13, background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '4px', cursor: 'pointer' }}
+                      value={selectedAdminOrder.status}
+                      onChange={e => handleUpdateOrderStatus(selectedAdminOrder.orderId, e.target.value)}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Preparing">Preparing</option>
+                      <option value="OutForDelivery">Out For Delivery</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Customer Details */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ color: 'var(--gold-light)', borderBottom: '1px solid var(--border-default)', paddingBottom: '6px', marginBottom: '10px' }}>Customer Information</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Name:</span>
+                      <p style={{ margin: '4px 0 0', fontWeight: 'bold' }}>{selectedAdminOrder.customerName}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Mobile:</span>
+                      <p style={{ margin: '4px 0 0' }}>{selectedAdminOrder.customerMobile}</p>
+                    </div>
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Delivery Address:</span>
+                      <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{selectedAdminOrder.customerAddress}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items Summary */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ color: 'var(--gold-light)', borderBottom: '1px solid var(--border-default)', paddingBottom: '6px', marginBottom: '10px' }}>Order Items</h4>
+                  <table className="admin-table" style={{ fontSize: '13px' }}>
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th style={{ textAlign: 'center' }}>Qty</th>
+                        <th style={{ textAlign: 'right' }}>Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedAdminOrder.items.map((item, idx) => (
+                        <tr key={idx}>
+                          <td>{item.name} {item.variant ? `(${item.variant})` : ''}</td>
+                          <td style={{ textAlign: 'center' }}>{item.qty}</td>
+                          <td style={{ textAlign: 'right' }}>₹{item.qty * item.price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  <div style={{ marginTop: '12px', paddingLeft: '40%', fontSize: '13px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
+                      <span>₹{selectedAdminOrder.subtotal}</span>
+                    </div>
+                    {selectedAdminOrder.discount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'var(--green)' }}>
+                        <span>Discount {selectedAdminOrder.couponCode ? `(${selectedAdminOrder.couponCode})` : ''}:</span>
+                        <span>-₹{selectedAdminOrder.discount}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Delivery:</span>
+                      <span>₹{selectedAdminOrder.deliveryFee}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid var(--border-default)', fontWeight: 'bold', fontSize: '15px' }}>
+                      <span>Total:</span>
+                      <span style={{ color: 'var(--gold-light)' }}>₹{selectedAdminOrder.total}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Uploaded Invoice Image */}
+                {selectedAdminOrder.imageUrl && (
+                  <div>
+                    <h4 style={{ color: 'var(--gold-light)', borderBottom: '1px solid var(--border-default)', paddingBottom: '6px', marginBottom: '10px' }}>Secure Invoice Image</h4>
+                    <img
+                      src={selectedAdminOrder.imageUrl}
+                      alt="Invoice"
+                      style={{ width: '100%', borderRadius: '4px', border: '1px solid var(--border-default)', cursor: 'pointer' }}
+                      onClick={() => window.open(selectedAdminOrder.imageUrl, '_blank')}
+                      title="Click to view full image in a new tab"
+                    />
+                  </div>
+                )}
+
+              </div>
+              <div className="admin-modal-footer">
+                <button className="admin-btn admin-btn-secondary" onClick={() => setSelectedAdminOrder(null)}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Add/Edit Food Item Modal ── */}
         {itemModalOpen && (
