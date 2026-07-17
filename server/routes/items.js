@@ -1,10 +1,13 @@
 import express from 'express';
+import { createRequire } from 'module';
 import Item from '../models/Item.js';
 import Settings from '../models/Settings.js';
 import Coupon from '../models/Coupon.js';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
-import itemsData from '../../src/data/items.json' assert { type: 'json' };
+
+const require = createRequire(import.meta.url);
+const itemsData = require('../../src/data/items.json');
 
 const router = express.Router();
 
