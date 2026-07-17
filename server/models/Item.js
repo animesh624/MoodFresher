@@ -50,6 +50,26 @@ const itemSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    weight: {
+      type: String,
+      default: '',
+    },
+    breakdown: {
+      type: String,
+      default: '',
+    },
+    originalPrice: {
+      type: Number,
+      default: null,
+    },
+    originalPriceHalf: {
+      type: Number,
+      default: null,
+    },
+    originalPriceFull: {
+      type: Number,
+      default: null,
+    },
     order: {
       type: Number,
       default: 0,
@@ -59,6 +79,9 @@ const itemSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Define compound index for optimal menu queries (sorting by category and id)
+itemSchema.index({ category: 1, id: 1 });
 
 const Item = mongoose.model('Item', itemSchema);
 export default Item;
