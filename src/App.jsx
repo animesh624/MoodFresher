@@ -274,7 +274,7 @@ function AppContent() {
   const isOpen = useMemo(() => isShopOperating(settings), [settings, isShopOperating])
 
   // Get active WhatsApp number
-  const whatsappNumber = settings?.whatsappNumber || '918736066574'
+  const whatsappNumber = settings?.whatsappNumber || import.meta.env.VITE_WHATSAPP_NUMBER || '918736066574'
   const minOrderAmount = settings?.minOrderAmount || 200
   const maxDeliveryDistance = settings?.maxDeliveryDistance || 8
 

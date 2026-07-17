@@ -30,7 +30,7 @@ const settingsSchema = new mongoose.Schema(
     },
     whatsappNumber: {
       type: String,
-      default: '918736066574',
+      default: () => process.env.WHATSAPP_NUMBER || '918736066574',
     },
     minOrderAmount: {
       type: Number,

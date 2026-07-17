@@ -34,7 +34,7 @@ const autoSeed = async () => {
           openTime: '17:00',
           closeTime: '23:59',
         },
-        whatsappNumber: '918736066574',
+        whatsappNumber: process.env.WHATSAPP_NUMBER || '918736066574',
         minOrderAmount: 200,
       });
       console.log('Auto-seeded settings.');
