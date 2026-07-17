@@ -383,6 +383,9 @@ function AppContent() {
     const storedToken = localStorage.getItem('adminToken')
     if (!storedToken) return // not an admin, ignore
 
+    // Set the admin token in state (critical: without this renderAdminView shows login form)
+    setAdminToken(storedToken)
+
     // Switch to admin view and load data
     setView('admin')
     setAdminView('orders')
@@ -393,7 +396,13 @@ function AppContent() {
         const res = await fetch('/api/orders', {
           headers: { 'Authorization': `Bearer ${storedToken}` }
         })
-        if (!res.ok) return
+        if (!res.ok) {
+          // Token might be expired — clear it and fall back
+          localStorage.removeItem('adminToken')
+          setAdminToken(null)
+          setView('menu')
+          return
+        }
         const orders = await res.json()
         setAdminOrders(Array.isArray(orders) ? orders : [])
         const target = Array.isArray(orders) ? orders.find(o => o.orderId === adminOrderId) : null
