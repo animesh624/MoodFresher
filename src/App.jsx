@@ -371,6 +371,42 @@ function AppContent() {
     fetchData()
   }, [])
 
+  // Handle admin order deep-link: ?admin_order=ORDER_ID
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const adminOrderId = params.get('admin_order')
+    if (!adminOrderId) return
+
+    // Clean URL without reload
+    window.history.replaceState({}, '', window.location.pathname)
+
+    const storedToken = localStorage.getItem('adminToken')
+    if (!storedToken) return // not an admin, ignore
+
+    // Switch to admin view and load data
+    setView('admin')
+    setAdminView('orders')
+
+    // Fetch orders and open the specific order modal
+    const loadAndFocusOrder = async () => {
+      try {
+        const res = await fetch('/api/orders', {
+          headers: { 'Authorization': `Bearer ${storedToken}` }
+        })
+        if (!res.ok) return
+        const orders = await res.json()
+        setAdminOrders(Array.isArray(orders) ? orders : [])
+        const target = Array.isArray(orders) ? orders.find(o => o.orderId === adminOrderId) : null
+        if (target) {
+          setSelectedAdminOrder(target)
+        }
+      } catch (err) {
+        console.error('Failed to load admin order from deep link', err)
+      }
+    }
+    loadAndFocusOrder()
+  }, [])
+
   // Sync cart changes to MongoDB database with 500ms debounce
   useEffect(() => {
     if (!cartLoaded || !sessionId) return
