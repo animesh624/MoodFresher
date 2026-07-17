@@ -494,21 +494,32 @@ function AppContent() {
   // Verify Admin Token on load
   useEffect(() => {
     if (adminToken) {
+      console.log('%c[MF Verify] Checking token validity...', 'color:#d4a24c;font-weight:bold')
       fetch('/api/auth/verify', {
         headers: { 'Authorization': `Bearer ${adminToken}` }
       })
       .then(res => {
-        if (!res.ok) {
+        console.log('[MF Verify] /api/auth/verify response:', res.status, res.statusText)
+        if (res.status === 401) {
+          // Only clear token on explicit 401 Unauthorized (token is genuinely invalid/expired)
+          console.warn('[MF Verify] Token is invalid (401) - clearing token and going to login')
           localStorage.removeItem('adminToken')
           setAdminToken(null)
+        } else if (!res.ok) {
+          // Server error (500, cold start, etc.) - DO NOT clear token, may be transient
+          console.warn('[MF Verify] Server error during verify (' + res.status + ') - keeping token (may be cold start)')
+        } else {
+          console.log('%c[MF Verify] Token is VALID ✅', 'color:#4ade80;font-weight:bold')
         }
       })
-      .catch(() => {
-        localStorage.removeItem('adminToken')
-        setAdminToken(null)
+      .catch((err) => {
+        // Network error (offline, timeout, Vercel cold start) - DO NOT clear token
+        // The token proved valid when /api/orders returned 200, so this is a transient error
+        console.warn('[MF Verify] Network error during verify - keeping token (likely transient):', err.message)
       })
     }
   }, [adminToken])
+
 
   // Fetch Admin Specific Data
   const fetchAdminData = async () => {
