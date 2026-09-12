@@ -456,9 +456,9 @@ a.contact-value { color: var(--gold); font-weight: 600; }
 /* ===== 24. RESPONSIVE: Tablet (max-width: 900px) ===== */
 @media (max-width: 900px) {
   .content { flex-direction: column; }
-  .order-panel { width: 100%; position: static; box-shadow: none; border-left: none; border-right: none; border-bottom: none; border-radius: 0; padding: 24px 0; background: transparent; }
+  .order-panel { display: none !important; }
   .menu-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .contact-page .order-panel { width: 100%; display: block; }
+  .contact-page .order-panel { width: 100%; display: block !important; }
   .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
   .trust-strip { grid-template-columns: repeat(2, 1fr); }
   .promo-strip { grid-template-columns: 1fr; }

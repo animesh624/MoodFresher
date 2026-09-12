@@ -218,7 +218,7 @@ function AppContent() {
     }
   }, [settings, selectedPaymentMethod])
   const [placedOrder, setPlacedOrder] = useState(null)
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false)
+  const [mobileCartModalOpen, setMobileCartModalOpen] = useState(false)
   const [locating, setLocating] = useState(false)
   const [deliveryDistance, setDeliveryDistance] = useState(null)
   const [activeCat, setActiveCat] = useState('All')
@@ -797,7 +797,9 @@ function AppContent() {
   }
 
   const scrollToOrderPanel = () => {
-    if (orderPanelRef.current) {
+    if (window.innerWidth <= 900) {
+      setMobileCartModalOpen(true)
+    } else if (orderPanelRef.current) {
       orderPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
@@ -2213,11 +2215,19 @@ function AppContent() {
             <button className={view === 'contact' ? 'active' : ''} onClick={() => { navigate('contact'); setNavOpen(false); }}>Contact</button>
             <button className={view === 'about' ? 'active' : ''} onClick={() => { navigate('about'); setNavOpen(false); }}>About</button>
           </nav>
-          <button className="hamburger" onClick={() => setNavOpen(!navOpen)} aria-label="Toggle menu">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+          <div className="top-actions">
+            {view === 'menu' && (
+              <button className="cart" onClick={scrollToOrderPanel} aria-label="Open cart">
+                🛒
+                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+              </button>
+            )}
+            <button className="hamburger" onClick={() => setNavOpen(!navOpen)} aria-label="Toggle menu">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
         </header>
 
         {view === 'menu' && (
@@ -2643,99 +2653,67 @@ function AppContent() {
             </div>
           )}
 
-          {/* Customer Details Entry Modal */}
-          {detailsModalOpen && (
+          {/* Mobile Cart & Order Details Modal Popup */}
+          {mobileCartModalOpen && (
             <div style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(5, 5, 10, 0.85)',
+              backgroundColor: 'rgba(5, 5, 10, 0.88)',
               backdropFilter: 'blur(12px)',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               justifyContent: 'center',
               zIndex: 10000,
-              padding: '20px'
+              padding: '0'
             }}>
-              <div className="shop-closed-card" style={{ maxWidth: '440px', padding: '36px 28px', animation: 'modalScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', display: 'flex', flexDirection: 'column', alignItems: 'stretch', textAlign: 'left' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '12px' }}>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '800', color: 'var(--gold-light)', margin: 0 }}>Delivery Information</h3>
-                  <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '24px', cursor: 'pointer', padding: 0, lineHeight: 1 }} onClick={() => setDetailsModalOpen(false)}>&times;</button>
-                </div>
-                
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  setDetailsModalOpen(false);
-                  initiatePayment();
-                }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Your Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%' }}
-                      placeholder="Enter your full name"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Mobile Number</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%' }}
-                      placeholder="Enter mobile number"
-                      value={mobile}
-                      onChange={e => setMobile(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Delivery Address</label>
-                    <textarea
-                      className="form-control"
-                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%', resize: 'none' }}
-                      placeholder="Flat/House No., Building Name, Street Address, Area"
-                      rows={3}
-                      value={address}
-                      onChange={e => setAddress(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Delivery Instructions (Optional)</label>
-                    <textarea
-                      className="form-control"
-                      style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '12px', fontSize: '14px', width: '100%', resize: 'none' }}
-                      placeholder="e.g. Ring the bell, keep near gate, etc."
-                      rows={2}
-                      value={instructions}
-                      onChange={e => setInstructions(e.target.value)}
-                    />
-                  </div>
-
-                  <div style={{ margin: '4px 0' }}>
-                    <button
-                      type="button"
-                      className={`loc-btn ${location ? 'shared' : ''}`}
-                      onClick={getUserLocation}
-                      disabled={locating}
-                      style={{ width: '100%' }}
-                    >
-                      {locating ? '📍 Getting location...' : location ? '📍 Location shared ✓' : '📍 Share live location'}
-                    </button>
-                  </div>
-
-                  <button type="submit" className="admin-btn admin-btn-primary" style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))', color: 'var(--bg-primary)', border: 'none', padding: '14px', borderRadius: '30px', fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', cursor: 'pointer', width: '100%', marginTop: '8px', justifyContent: 'center' }}>
-                    Confirm & Place Order
+              <div style={{
+                width: '100%',
+                maxHeight: '90vh',
+                backgroundColor: 'var(--bg-card)',
+                borderTopLeftRadius: '24px',
+                borderTopRightRadius: '24px',
+                border: '1px solid var(--border-default)',
+                borderBottom: 'none',
+                boxShadow: '0 -10px 40px rgba(0,0,0,0.6)',
+                overflowY: 'auto',
+                padding: '24px 20px 36px 20px',
+                animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justify: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px',
+                  paddingBottom: '12px',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  sticky: 'top'
+                }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '800', color: 'var(--gold-light)', margin: 0 }}>
+                    🛒 Cart & Order Summary
+                  </h3>
+                  <button
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      color: 'var(--text-primary)',
+                      fontSize: '20px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: 1
+                    }}
+                    onClick={() => setMobileCartModalOpen(false)}
+                    aria-label="Close modal"
+                  >
+                    &times;
                   </button>
+                </div>
 
-                </form>
+                {renderOrderContent()}
               </div>
             </div>
           )}
