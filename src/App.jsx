@@ -218,7 +218,6 @@ function AppContent() {
     }
   }, [settings, selectedPaymentMethod])
   const [placedOrder, setPlacedOrder] = useState(null)
-  const [invoiceBlob, setInvoiceBlob] = useState(null)
   const [mobileCartModalOpen, setMobileCartModalOpen] = useState(false)
   const [locating, setLocating] = useState(false)
   const [deliveryDistance, setDeliveryDistance] = useState(null)
@@ -773,7 +772,7 @@ function AppContent() {
       const timeoutId = setTimeout(() => setShowCelebration(false), 6000)
       return () => clearTimeout(timeoutId)
     }
-  }, [activeTier, subtotal])
+  }, [activeTier])
 
   const getUserLocation = () => {
     if (!navigator.geolocation) {
@@ -1138,6 +1137,8 @@ function AppContent() {
     setAppliedCoupon(null);
     setCouponCode('');
     setMobileCartModalOpen(false);
+    setShowCelebration(false);
+    setCelebratedTier(null);
     try {
       await fetch(`/api/cart/${sessionId}`, {
         method: 'POST',
@@ -1206,7 +1207,6 @@ function AppContent() {
         const invoice = await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
         const orderWithInvoice = { ...savedOrder, imageUrl: invoice.url || savedOrder.imageUrl };
         await clearCartAfterOrder();
-        setInvoiceBlob(invoice.blob);
         setPlacedOrder(orderWithInvoice);
         toast.success('COD Order placed! Redirecting to WhatsApp...');
         triggerWhatsAppRedirect(orderWithInvoice);
@@ -1281,7 +1281,6 @@ function AppContent() {
               const invoice = await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
               const orderWithInvoice = { ...savedOrder, imageUrl: invoice.url || savedOrder.imageUrl };
               await clearCartAfterOrder();
-              setInvoiceBlob(invoice.blob);
               setPlacedOrder(orderWithInvoice);
               toast.success('Payment successful! Redirecting to WhatsApp 🎉');
               triggerWhatsAppRedirect(orderWithInvoice);
@@ -2708,12 +2707,6 @@ function AppContent() {
                 </div>
 
                 <div className="closed-actions" style={{ width: '100%', flexDirection: 'column', gap: '10px' }}>
-                  <button className="wa-btn" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
-                    shareOrderOnWhatsApp(placedOrder, invoiceBlob, true);
-                  }}>
-                    💬 Send invoice on WhatsApp
-                  </button>
-                  
                   <button className="primary" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
                     window.open(`/order/${placedOrder.orderId}`, '_blank');
                   }}>
