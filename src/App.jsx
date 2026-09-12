@@ -2529,13 +2529,7 @@ function AppContent() {
                     </span>
                   )}
                 </div>
-                <button className="bottom-bar-btn" onClick={() => {
-                  scrollToOrderPanel()
-                  const hasDetails = name.trim() && mobile.trim() && address.trim()
-                  if (!hasDetails) {
-                    setDetailsModalOpen(true)
-                  }
-                }}>
+                <button className="bottom-bar-btn" onClick={scrollToOrderPanel}>
                   View Cart →
                 </button>
               </div>
