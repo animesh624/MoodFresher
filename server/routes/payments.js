@@ -2,6 +2,7 @@ import express from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.js';
+import { sendNewOrderNotification } from '../services/pushNotifications.js';
 
 const router = express.Router();
 
@@ -115,6 +116,7 @@ router.post('/verify', async (req, res) => {
     });
 
     const createdOrder = await order.save();
+    await sendNewOrderNotification(createdOrder);
     res.status(201).json({ success: true, order: createdOrder });
   } catch (error) {
     console.error('Razorpay verify error:', error.message);
@@ -166,6 +168,7 @@ router.post('/cod-order', async (req, res) => {
     });
 
     const createdOrder = await order.save();
+    await sendNewOrderNotification(createdOrder);
     res.status(201).json({ success: true, order: createdOrder });
   } catch (error) {
     console.error('COD order error:', error.message);

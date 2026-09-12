@@ -13,6 +13,7 @@ import uploadRoutes from './routes/upload.js';
 import cartRoutes from './routes/cart.js';
 import ordersRoutes from './routes/orders.js';
 import paymentRoutes from './routes/payments.js';
+import notificationRoutes from './routes/notifications.js';
 import Order from './models/Order.js';
 
 import { fileURLToPath } from 'url';
@@ -47,6 +48,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Dynamic SSR order tracking page for WhatsApp previews and live customer status checks
 app.get('/order/:orderId', async (req, res) => {

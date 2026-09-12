@@ -300,6 +300,7 @@ function AppContent() {
   const [adminOrders, setAdminOrders] = useState([])
   const [adminOrdersLoading, setAdminOrdersLoading] = useState(false)
   const [selectedAdminOrder, setSelectedAdminOrder] = useState(null)
+  const [pushStatus, setPushStatus] = useState('idle')
 
   // Admin Item Edit/Create Modal states
   const [itemModalOpen, setItemModalOpen] = useState(false)
@@ -1369,6 +1370,59 @@ function AppContent() {
     setAdminToken(null)
     localStorage.removeItem('adminToken')
     toast.info('Logged out from Admin Dashboard')
+  }
+
+  const enableOrderNotifications = async () => {
+    if (!adminToken || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toast.error('Push notifications are not supported in this browser.')
+      return
+    }
+
+    setPushStatus('enabling')
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        setPushStatus('denied')
+        toast.error('Please allow notifications in your browser settings.')
+        return
+      }
+
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      const keyResponse = await fetch('/api/notifications/vapid-public-key', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      })
+      const keyData = await keyResponse.json()
+      if (!keyResponse.ok) throw new Error(keyData.message || 'Push notifications are not configured')
+
+      const decodeKey = (base64Key) => {
+        const padding = '='.repeat((4 - (base64Key.length % 4)) % 4)
+        const base64 = (base64Key + padding).replace(/-/g, '+').replace(/_/g, '/')
+        const rawData = window.atob(base64)
+        return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)))
+      }
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: decodeKey(keyData.publicKey),
+      })
+
+      const subscribeResponse = await fetch('/api/notifications/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify(subscription),
+      })
+      const subscribeData = await subscribeResponse.json()
+      if (!subscribeResponse.ok) throw new Error(subscribeData.message || 'Could not enable notifications')
+
+      setPushStatus('enabled')
+      toast.success('New order notifications enabled!')
+    } catch (error) {
+      setPushStatus('error')
+      console.error('Push notification setup failed:', error)
+      toast.error(error.message || 'Could not enable notifications')
+    }
   }
 
   // Admin password update
@@ -2875,6 +2929,9 @@ function AppContent() {
                 <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
                   <button className="admin-btn admin-btn-primary" onClick={() => setAdminView('menu')}>Manage Menu Items</button>
                   <button className="admin-btn admin-btn-secondary" onClick={() => setAdminView('settings')}>Edit Operating Hours</button>
+                  <button className="admin-btn admin-btn-secondary" onClick={enableOrderNotifications} disabled={pushStatus === 'enabling'}>
+                    {pushStatus === 'enabled' ? '🔔 Notifications Enabled' : pushStatus === 'enabling' ? 'Enabling...' : '🔔 Enable Order Alerts'}
+                  </button>
                 </div>
               </div>
             </div>

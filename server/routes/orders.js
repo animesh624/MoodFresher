@@ -3,6 +3,7 @@ import multer from 'multer';
 import axios from 'axios';
 import Order from '../models/Order.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { sendNewOrderNotification } from '../services/pushNotifications.js';
 
 const router = express.Router();
 
@@ -51,6 +52,7 @@ router.post('/', async (req, res) => {
     });
 
     const createdOrder = await order.save();
+    await sendNewOrderNotification(createdOrder);
     res.status(201).json(createdOrder);
   } catch (error) {
     res.status(500).json({ message: error.message });
