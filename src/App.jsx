@@ -1162,25 +1162,6 @@ function AppContent() {
           description: `Order — ₹${total}`,
           image: 'https://i.ibb.co/your-logo', // optional
           order_id: razorpayOrderId,
-          config: {
-            display: {
-              blocks: {
-                banks: {
-                  name: 'Pay using UPI / QR / Card',
-                  instruments: [
-                    { method: 'upi' },
-                    { method: 'card' },
-                    { method: 'netbanking' },
-                    { method: 'wallet' },
-                  ],
-                },
-              },
-              sequence: ['block.banks'],
-              preferences: {
-                show_default_blocks: true,
-              },
-            },
-          },
           prefill: {
             name: name,
             contact: mobile,
