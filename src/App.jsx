@@ -218,6 +218,7 @@ function AppContent() {
     }
   }, [settings, selectedPaymentMethod])
   const [placedOrder, setPlacedOrder] = useState(null)
+  const [invoiceBlob, setInvoiceBlob] = useState(null)
   const [mobileCartModalOpen, setMobileCartModalOpen] = useState(false)
   const [locating, setLocating] = useState(false)
   const [deliveryDistance, setDeliveryDistance] = useState(null)
@@ -1045,53 +1046,82 @@ function AppContent() {
   const uploadInvoiceCanvas = async (orderId, orderPayload) => {
     try {
       const canvas = await generateInvoiceCanvas(orderId, orderPayload);
-      await new Promise((resolveUpload) => {
+      return await new Promise((resolveUpload) => {
         canvas.toBlob(async (blob) => {
-          if (!blob) { resolveUpload(); return; }
+          if (!blob) { resolveUpload({ blob: null, url: '' }); return; }
           const formData = new FormData();
           formData.append('image', blob, `invoice_${orderId}.png`);
+          let imageUrl = '';
           try {
             const uploadRes = await fetch(`/api/orders/${orderId}/upload-summary`, {
               method: 'POST', body: formData
             });
-            if (!uploadRes.ok) console.warn('Invoice upload warning');
+            if (uploadRes.ok) {
+              const uploadData = await uploadRes.json();
+              imageUrl = uploadData.url || '';
+            } else {
+              console.warn('Invoice upload warning');
+            }
           } catch (uploadErr) {
             console.error('Invoice upload error:', uploadErr);
           }
-          resolveUpload();
+          resolveUpload({ blob, url: imageUrl });
         }, 'image/png');
       });
     } catch (err) {
       console.error('Canvas error:', err);
+      return { blob: null, url: '' };
+    }
+  };
+
+  const buildWhatsAppMessage = (savedOrder) => {
+    let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nPayment Status: ${savedOrder.paymentStatus || 'Paid'}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
+    if (savedOrder.imageUrl) {
+      waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
+    }
+    let currentLoc = location;
+    if (!currentLoc && savedOrder.customerAddress) {
+      const match = savedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
+      if (match) currentLoc = match[1];
+    }
+    if (currentLoc) waMsg += `\n\n📍 Live Location: ${currentLoc}`;
+    return waMsg;
+  };
+
+  const shareOrderOnWhatsApp = async (savedOrder, invoiceImageBlob = null) => {
+    const waMsg = buildWhatsAppMessage(savedOrder);
+    const invoiceFile = invoiceImageBlob
+      ? new File([invoiceImageBlob], `invoice_${savedOrder.orderId}.png`, { type: 'image/png' })
+      : null;
+
+    // Native sharing can attach the invoice image and the message in one WhatsApp share.
+    if (invoiceFile && navigator.share && navigator.canShare?.({ files: [invoiceFile] })) {
+      try {
+        await navigator.share({
+          title: `MoodFresher invoice ${savedOrder.orderId}`,
+          text: waMsg,
+          files: [invoiceFile],
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        console.warn('Invoice image share unavailable, opening WhatsApp link:', err);
+      }
+    }
+
+    const waNum = settings?.whatsappNumber || whatsappNumber || '918736066574';
+    const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`;
+    const newWin = window.open(targetUrl, '_blank');
+    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+      window.location.href = targetUrl;
     }
   };
 
   // Helper: Automatically redirect customer to WhatsApp after a short delay (so success modal displays first)
-  const triggerWhatsAppRedirect = (savedOrder, delayMs = 2500) => {
+  const triggerWhatsAppRedirect = (savedOrder, invoiceImageBlob = null, delayMs = 2500) => {
     setTimeout(() => {
       try {
-        const waNum = settings?.whatsappNumber || whatsappNumber || '918736066574';
-        let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nPayment Status: ${savedOrder.paymentStatus || 'Paid'}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
-        if (savedOrder.imageUrl) {
-          waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
-        }
-        let currentLoc = location;
-        if (!currentLoc && savedOrder.customerAddress) {
-          const match = savedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
-          if (match) {
-            currentLoc = match[1];
-          }
-        }
-        if (currentLoc) {
-          waMsg += `\n\n📍 Live Location: ${currentLoc}`;
-        }
-        const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`;
-        
-        // Try opening in new tab or fallback to current window redirect
-        const newWin = window.open(targetUrl, '_blank');
-        if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-          window.location.href = targetUrl;
-        }
+        shareOrderOnWhatsApp(savedOrder, invoiceImageBlob);
       } catch (err) {
         console.error('WhatsApp auto redirect error:', err);
       }
@@ -1168,11 +1198,13 @@ function AppContent() {
         if (!res.ok) throw new Error(data.message || 'Failed to place COD order');
 
         const savedOrder = data.order;
-        await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
+        const invoice = await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
+        const orderWithInvoice = { ...savedOrder, imageUrl: invoice.url || savedOrder.imageUrl };
         await clearCartAfterOrder();
-        setPlacedOrder(savedOrder);
+        setInvoiceBlob(invoice.blob);
+        setPlacedOrder(orderWithInvoice);
         toast.success('COD Order placed! Redirecting to WhatsApp...');
-        triggerWhatsAppRedirect(savedOrder);
+        triggerWhatsAppRedirect(orderWithInvoice, invoice.blob);
       } catch (err) {
         console.error(err);
         toast.error(err.message || 'Failed to place COD order');
@@ -1241,11 +1273,13 @@ function AppContent() {
               if (!verifyRes.ok) throw new Error(verifyData.message || 'Payment verification failed');
 
               const savedOrder = verifyData.order;
-              await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
+              const invoice = await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
+              const orderWithInvoice = { ...savedOrder, imageUrl: invoice.url || savedOrder.imageUrl };
               await clearCartAfterOrder();
-              setPlacedOrder(savedOrder);
+              setInvoiceBlob(invoice.blob);
+              setPlacedOrder(orderWithInvoice);
               toast.success('Payment successful! Redirecting to WhatsApp 🎉');
-              triggerWhatsAppRedirect(savedOrder);
+              triggerWhatsAppRedirect(orderWithInvoice, invoice.blob);
               resolvePayment();
             } catch (err) {
               console.error('Verify error:', err);
@@ -2620,23 +2654,9 @@ function AppContent() {
 
                 <div className="closed-actions" style={{ width: '100%', flexDirection: 'column', gap: '10px' }}>
                   <button className="wa-btn" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
-                    let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${placedOrder.orderId}\nTotal: ₹${placedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${placedOrder.orderId}`;
-                    if (placedOrder.imageUrl) {
-                      waMsg += `\n\nSecure Invoice Image: ${placedOrder.imageUrl}`;
-                    }
-                    let currentLoc = location;
-                    if (!currentLoc && placedOrder.customerAddress) {
-                      const match = placedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
-                      if (match) {
-                        currentLoc = match[1];
-                      }
-                    }
-                    if (currentLoc) {
-                      waMsg += `\n\n📍 Live Location: ${currentLoc}`;
-                    }
-                    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMsg)}`, '_blank');
+                    shareOrderOnWhatsApp(placedOrder, invoiceBlob);
                   }}>
-                    💬 Confirm on WhatsApp
+                    💬 Send invoice on WhatsApp
                   </button>
                   
                   <button className="primary" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
