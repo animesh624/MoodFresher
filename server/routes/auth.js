@@ -5,7 +5,7 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Generate Token
+// Generate Token.
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretjwtkeymoodfresher', {
     expiresIn: '30d',
