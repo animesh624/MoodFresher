@@ -761,16 +761,17 @@ function AppContent() {
   const isDeliverable = deliveryDistance == null || deliveryDistance <= maxDeliveryDistance
   const canPlace = name.trim() !== '' && address.trim() !== '' && mobile.trim() !== '' && subtotal > 0 && whatsappNumber && isOpen && meetsMinOrder && isDeliverable && location !== null
 
-  // Trigger celebrated tier popups
+  // Trigger a celebration whenever the cart crosses into a higher discount tier.
   useEffect(() => {
     const currentTierKey = activeTier ? activeTier.minAmount : 0
-    if (currentTierKey !== prevTierRef.current) {
-      if (currentTierKey > 0 && (prevTierRef.current === null || currentTierKey > prevTierRef.current)) {
-        setCelebratedTier(activeTier)
-        setShowCelebration(true)
-        setTimeout(() => setShowCelebration(false), 6000)
-      }
-      prevTierRef.current = currentTierKey
+    const previousTierKey = prevTierRef.current
+    prevTierRef.current = currentTierKey
+
+    if (currentTierKey > 0 && (previousTierKey === null || currentTierKey > previousTierKey)) {
+      setCelebratedTier(activeTier)
+      setShowCelebration(true)
+      const timeoutId = setTimeout(() => setShowCelebration(false), 6000)
+      return () => clearTimeout(timeoutId)
     }
   }, [activeTier, subtotal])
 
@@ -1136,6 +1137,7 @@ function AppContent() {
     setQuantities({});
     setAppliedCoupon(null);
     setCouponCode('');
+    setMobileCartModalOpen(false);
     try {
       await fetch(`/api/cart/${sessionId}`, {
         method: 'POST',
@@ -1853,40 +1855,6 @@ function AppContent() {
   /* ── Order Panel Content ── */
   const renderOrderContent = () => (
     <>
-      {/* Celebration overlay */}
-      {showCelebration && celebratedTier && (() => {
-        const nextTierAfter = getNextTier(celebratedTier.minAmount)
-        const amtSaved = Math.round((subtotal * celebratedTier.discountPercent) / 100)
-        return (
-          <div className="celebration-overlay">
-            <div className="celebration-content">
-              <div className="celebration-sparkles">✨🎉✨</div>
-              <div className="celebration-title">{celebratedTier.emoji} {celebratedTier.label} Unlocked!</div>
-              <div className="celebration-sub">You saved ₹{amtSaved} on this order! 🎊</div>
-              <div className="celebration-bar">
-                <div className="celebration-fill" style={{ width: '100%' }}></div>
-              </div>
-              {nextTierAfter && (
-                <div className="celebration-upsell">
-                  <div className="upsell-divider"></div>
-                  <div className="upsell-text">
-                    ⬆️ Add <strong>₹{Math.max(0, nextTierAfter.minAmount - subtotal)}</strong> more to get <strong>{nextTierAfter.emoji} {nextTierAfter.label}</strong>
-                  </div>
-                </div>
-              )}
-              {!nextTierAfter && (
-                <div className="celebration-upsell">
-                  <div className="upsell-divider"></div>
-                  <div className="upsell-text max">
-                    🏆 Maximum discount achieved! You're saving big today.
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )
-      })()}
-
       <h4>Order summary</h4>
 
       {/* Discount Ladder / Progress Bar (Only visible when no custom coupon is applied) */}
@@ -2664,6 +2632,37 @@ function AppContent() {
             </div>
           )}
 
+          {/* Discount celebration stays visible while selecting items, including on mobile. */}
+          {showCelebration && celebratedTier && (() => {
+            const nextTierAfter = getNextTier(celebratedTier.minAmount)
+            const amtSaved = Math.round((subtotal * celebratedTier.discountPercent) / 100)
+            return (
+              <div className="celebration-overlay">
+                <div className="celebration-content">
+                  <div className="celebration-sparkles">✨🎉✨</div>
+                  <div className="celebration-title">{celebratedTier.emoji} {celebratedTier.label} Unlocked!</div>
+                  <div className="celebration-sub">You saved ₹{amtSaved} on this order! 🎊</div>
+                  <div className="celebration-bar">
+                    <div className="celebration-fill" style={{ width: '100%' }}></div>
+                  </div>
+                  {nextTierAfter ? (
+                    <div className="celebration-upsell">
+                      <div className="upsell-divider"></div>
+                      <div className="upsell-text">
+                        ⬆️ Add <strong>₹{Math.max(0, nextTierAfter.minAmount - subtotal)}</strong> more to get <strong>{nextTierAfter.emoji} {nextTierAfter.label}</strong>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="celebration-upsell">
+                      <div className="upsell-divider"></div>
+                      <div className="upsell-text max">🏆 Maximum discount achieved! You're saving big today.</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Placed Order Success Modal */}
           {placedOrder && (
             <div style={{
@@ -2768,22 +2767,9 @@ function AppContent() {
                     🛒 Cart & Order Summary
                   </h3>
                   <button
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: '50%',
-                      width: '32px',
-                      height: '32px',
-                      color: 'var(--text-primary)',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: 1
-                    }}
+                    className="admin-modal-close"
                     onClick={() => setMobileCartModalOpen(false)}
-                    aria-label="Close modal"
+                    aria-label="Close cart and order summary"
                   >
                     &times;
                   </button>
