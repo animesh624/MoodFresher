@@ -37,6 +37,10 @@ const settingsSchema = new mongoose.Schema(
       default: 200,
     },
     // ── Payment Settings ──
+    onlinePaymentEnabled: {
+      type: Boolean,
+      default: true, // Online payment (Razorpay) enabled by default
+    },
     codEnabled: {
       type: Boolean,
       default: false, // Cash on Delivery disabled by default

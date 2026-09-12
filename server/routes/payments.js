@@ -26,6 +26,13 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ message: 'Invalid order amount' });
     }
 
+    // Check if online payment is enabled in settings
+    const Settings = (await import('../models/Settings.js')).default;
+    const settings = await Settings.findOne({});
+    if (settings && settings.onlinePaymentEnabled === false) {
+      return res.status(403).json({ message: 'Online payment is currently disabled by store management.' });
+    }
+
     const razorpay = getRazorpayInstance();
 
     // Amount must be in paise (1 INR = 100 paise)

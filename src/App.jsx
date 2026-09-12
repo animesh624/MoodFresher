@@ -204,6 +204,19 @@ function AppContent() {
   const [placingOrder, setPlacingOrder] = useState(false)
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('razorpay') // 'razorpay' | 'cod'
+
+  // Auto-sync active payment method if admin disables online payment
+  useEffect(() => {
+    if (settings) {
+      const onlineAllowed = settings.onlinePaymentEnabled !== false
+      const codAllowed = !!settings.codEnabled
+      if (!onlineAllowed && codAllowed && selectedPaymentMethod === 'razorpay') {
+        setSelectedPaymentMethod('cod')
+      } else if (onlineAllowed && !codAllowed && selectedPaymentMethod === 'cod') {
+        setSelectedPaymentMethod('razorpay')
+      }
+    }
+  }, [settings, selectedPaymentMethod])
   const [placedOrder, setPlacedOrder] = useState(null)
   const [detailsModalOpen, setDetailsModalOpen] = useState(false)
   const [locating, setLocating] = useState(false)
@@ -1375,6 +1388,15 @@ function AppContent() {
 
   const handleSettingsUpdate = async (e) => {
     e.preventDefault()
+
+    // Validation: At least one payment method must be enabled
+    const onlineOn = settings?.onlinePaymentEnabled !== false
+    const codOn = !!settings?.codEnabled
+    if (!onlineOn && !codOn) {
+      toast.error('⚠️ At least one payment method (Online Payment or Cash on Delivery) must be enabled!')
+      return
+    }
+
     try {
       const res = await fetch('/api/settings', {
         method: 'PUT',
@@ -1934,18 +1956,20 @@ function AppContent() {
         <div className="payment-method-selector">
           <div className="payment-method-title">💳 Payment Method</div>
           <div className="payment-method-options">
-            <button
-              className={`payment-method-option ${selectedPaymentMethod === 'razorpay' ? 'selected' : ''}`}
-              onClick={() => setSelectedPaymentMethod('razorpay')}
-              type="button"
-            >
-              <span className="payment-method-icon">💳</span>
-              <span className="payment-method-label">
-                <strong>Pay Online</strong>
-                <small>Card, UPI, Net Banking, QR</small>
-              </span>
-              {selectedPaymentMethod === 'razorpay' && <span className="payment-method-check">✓</span>}
-            </button>
+            {settings?.onlinePaymentEnabled !== false && (
+              <button
+                className={`payment-method-option ${selectedPaymentMethod === 'razorpay' ? 'selected' : ''}`}
+                onClick={() => setSelectedPaymentMethod('razorpay')}
+                type="button"
+              >
+                <span className="payment-method-icon">💳</span>
+                <span className="payment-method-label">
+                  <strong>Pay Online</strong>
+                  <small>Card, UPI, Net Banking, QR</small>
+                </span>
+                {selectedPaymentMethod === 'razorpay' && <span className="payment-method-check">✓</span>}
+              </button>
+            )}
             {settings?.codEnabled && (
               <button
                 className={`payment-method-option ${selectedPaymentMethod === 'cod' ? 'selected' : ''}`}
@@ -3217,18 +3241,35 @@ function AppContent() {
                       />
                     </div>
 
-                    <div className="checkbox-group" style={{ marginTop: 16, marginBottom: 16, padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 8, border: '1px solid var(--border-default)' }}>
-                      <input
-                        type="checkbox"
-                        id="cod-enabled"
-                        checked={settings.codEnabled || false}
-                        onChange={e => setSettings({ ...settings, codEnabled: e.target.checked })}
-                      />
-                      <label htmlFor="cod-enabled" style={{ fontWeight: 'bold', cursor: 'pointer' }}>
-                        💵 Enable Cash on Delivery (COD)
-                      </label>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, marginLeft: 24 }}>
-                        When disabled, customers can only pay online via Razorpay.
+                    <div style={{ marginTop: 20, marginBottom: 16, padding: '14px', background: 'var(--bg-tertiary)', borderRadius: 10, border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ fontWeight: 'bold', fontSize: 14, color: 'var(--gold-light)' }}>💳 Payment Method Options</div>
+                      
+                      <div className="checkbox-group" style={{ margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          id="online-enabled"
+                          checked={settings.onlinePaymentEnabled !== false}
+                          onChange={e => setSettings({ ...settings, onlinePaymentEnabled: e.target.checked })}
+                        />
+                        <label htmlFor="online-enabled" style={{ fontWeight: '600', cursor: 'pointer' }}>
+                          💳 Enable Online Payment (Razorpay - UPI / Cards / Net Banking)
+                        </label>
+                      </div>
+
+                      <div className="checkbox-group" style={{ margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          id="cod-enabled"
+                          checked={settings.codEnabled || false}
+                          onChange={e => setSettings({ ...settings, codEnabled: e.target.checked })}
+                        />
+                        <label htmlFor="cod-enabled" style={{ fontWeight: '600', cursor: 'pointer' }}>
+                          💵 Enable Cash on Delivery (COD)
+                        </label>
+                      </div>
+
+                      <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 2 }}>
+                        ℹ️ Note: At least one payment method must remain enabled for customers to order.
                       </div>
                     </div>
 

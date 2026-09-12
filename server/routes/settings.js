@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 // @route   PUT /api/settings
 // @access  Private
 router.put('/', protect, async (req, res) => {
-  const { shopOpen, maxDeliveryDistance, operatingHours, whatsappNumber, minOrderAmount, codEnabled } = req.body;
+  const { shopOpen, maxDeliveryDistance, operatingHours, whatsappNumber, minOrderAmount, onlinePaymentEnabled, codEnabled } = req.body;
 
   try {
     let settings = await Settings.findOne({});
@@ -32,11 +32,19 @@ router.put('/', protect, async (req, res) => {
       settings = new Settings({});
     }
 
+    const nextOnlineEnabled = onlinePaymentEnabled !== undefined ? onlinePaymentEnabled : (settings.onlinePaymentEnabled ?? true);
+    const nextCodEnabled = codEnabled !== undefined ? codEnabled : settings.codEnabled;
+
+    if (!nextOnlineEnabled && !nextCodEnabled) {
+      return res.status(400).json({ message: 'At least one payment method (Online Payment or COD) must be enabled.' });
+    }
+
     settings.shopOpen = shopOpen !== undefined ? shopOpen : settings.shopOpen;
     settings.maxDeliveryDistance = maxDeliveryDistance !== undefined ? maxDeliveryDistance : settings.maxDeliveryDistance;
     settings.whatsappNumber = whatsappNumber !== undefined ? whatsappNumber : settings.whatsappNumber;
     settings.minOrderAmount = minOrderAmount !== undefined ? minOrderAmount : settings.minOrderAmount;
-    settings.codEnabled = codEnabled !== undefined ? codEnabled : settings.codEnabled;
+    settings.onlinePaymentEnabled = nextOnlineEnabled;
+    settings.codEnabled = nextCodEnabled;
 
     if (operatingHours) {
       settings.operatingHours = {
