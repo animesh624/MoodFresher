@@ -172,7 +172,7 @@ function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={contextValue}>
       {children}
-      <div className="toast-container" style={{ zIndex: 9999 }}>
+      <div className="toast-container" style={{ zIndex: 11000 }}>
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.type}`}>
             <span className="toast-icon">{t.type === 'success' ? '✅' : t.type === 'error' ? '❌' : 'ℹ️'}</span>
@@ -799,11 +799,7 @@ function AppContent() {
   }
 
   const scrollToOrderPanel = () => {
-    if (window.innerWidth <= 900) {
-      setMobileCartModalOpen(true)
-    } else if (orderPanelRef.current) {
-      orderPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    setMobileCartModalOpen(true)
   }
 
   // Handle Coupon Apply
@@ -2721,9 +2717,9 @@ function AppContent() {
             </div>
           )}
 
-          {/* Mobile Cart & Order Details Modal Popup */}
+          {/* Cart & Order Details Modal Popup */}
           {mobileCartModalOpen && (
-            <div style={{
+            <div className="cart-summary-modal-backdrop" style={{
               position: 'fixed',
               inset: 0,
               backgroundColor: 'rgba(5, 5, 10, 0.88)',
@@ -2734,7 +2730,7 @@ function AppContent() {
               zIndex: 10000,
               padding: '0'
             }}>
-              <div style={{
+              <div className="cart-summary-modal" style={{
                 width: '100%',
                 maxHeight: '90vh',
                 backgroundColor: 'var(--bg-card)',
@@ -2754,7 +2750,11 @@ function AppContent() {
                   marginBottom: '16px',
                   paddingBottom: '12px',
                   borderBottom: '1px solid var(--border-subtle)',
-                  sticky: 'top'
+                  position: 'sticky',
+                  top: '-24px',
+                  zIndex: 2,
+                  backgroundColor: 'var(--bg-card)',
+                  paddingTop: '24px'
                 }}>
                   <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '800', color: 'var(--gold-light)', margin: 0 }}>
                     🛒 Cart & Order Summary

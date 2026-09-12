@@ -260,6 +260,26 @@
 .toast-icon { font-size: 20px; flex-shrink: 0; }
 .toast-msg { font-size: 14px; font-weight: 500; color: var(--text-primary); flex: 1; }
 
+/* Cart summary opens as a bottom sheet on small screens and a centered dialog on desktop. */
+.cart-summary-modal-backdrop { overflow: hidden; }
+.cart-summary-modal { border-radius: 24px; }
+
+@media (min-width: 901px) {
+  .cart-summary-modal-backdrop {
+    align-items: center !important;
+    padding: 24px !important;
+  }
+
+  .cart-summary-modal {
+    width: min(620px, 100%) !important;
+    max-height: min(86vh, 760px) !important;
+    border-radius: 18px !important;
+    border-bottom: 1px solid var(--border-default) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.65) !important;
+    animation: modalScaleUp 0.3s ease !important;
+  }
+}
+
 /* ===== 19. SHOP CLOSED OVERLAY ===== */
 .shop-closed-overlay {
   position: fixed;
