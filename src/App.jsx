@@ -1088,8 +1088,9 @@ function AppContent() {
     return waMsg;
   };
 
-  const shareOrderOnWhatsApp = async (savedOrder, invoiceImageBlob = null) => {
+  const shareOrderOnWhatsApp = async (savedOrder, invoiceImageBlob = null, includeInvoiceLink = true) => {
     const waMsg = buildWhatsAppMessage(savedOrder);
+    const message = includeInvoiceLink ? waMsg : waMsg.replace(`\n\nSecure Invoice Image: ${savedOrder.imageUrl}`, '');
     const invoiceFile = invoiceImageBlob
       ? new File([invoiceImageBlob], `invoice_${savedOrder.orderId}.png`, { type: 'image/png' })
       : null;
@@ -1099,7 +1100,7 @@ function AppContent() {
       try {
         await navigator.share({
           title: `MoodFresher invoice ${savedOrder.orderId}`,
-          text: waMsg,
+          text: message,
           files: [invoiceFile],
         });
         return;
@@ -1110,7 +1111,7 @@ function AppContent() {
     }
 
     const waNum = settings?.whatsappNumber || whatsappNumber || '918736066574';
-    const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`;
+    const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(message)}`;
     const newWin = window.open(targetUrl, '_blank');
     if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
       window.location.href = targetUrl;
@@ -1118,10 +1119,11 @@ function AppContent() {
   };
 
   // Helper: Automatically redirect customer to WhatsApp after a short delay (so success modal displays first)
-  const triggerWhatsAppRedirect = (savedOrder, invoiceImageBlob = null, delayMs = 2500) => {
+  const triggerWhatsAppRedirect = (savedOrder, delayMs = 2500) => {
     setTimeout(() => {
       try {
-        shareOrderOnWhatsApp(savedOrder, invoiceImageBlob);
+        // File attachments require a user gesture; the timed redirect can only open text.
+        shareOrderOnWhatsApp(savedOrder, null, false);
       } catch (err) {
         console.error('WhatsApp auto redirect error:', err);
       }
@@ -1204,7 +1206,7 @@ function AppContent() {
         setInvoiceBlob(invoice.blob);
         setPlacedOrder(orderWithInvoice);
         toast.success('COD Order placed! Redirecting to WhatsApp...');
-        triggerWhatsAppRedirect(orderWithInvoice, invoice.blob);
+        triggerWhatsAppRedirect(orderWithInvoice);
       } catch (err) {
         console.error(err);
         toast.error(err.message || 'Failed to place COD order');
@@ -1279,7 +1281,7 @@ function AppContent() {
               setInvoiceBlob(invoice.blob);
               setPlacedOrder(orderWithInvoice);
               toast.success('Payment successful! Redirecting to WhatsApp 🎉');
-              triggerWhatsAppRedirect(orderWithInvoice, invoice.blob);
+              triggerWhatsAppRedirect(orderWithInvoice);
               resolvePayment();
             } catch (err) {
               console.error('Verify error:', err);
@@ -2654,7 +2656,7 @@ function AppContent() {
 
                 <div className="closed-actions" style={{ width: '100%', flexDirection: 'column', gap: '10px' }}>
                   <button className="wa-btn" style={{ width: '100%', padding: '12px 16px' }} onClick={() => {
-                    shareOrderOnWhatsApp(placedOrder, invoiceBlob);
+                    shareOrderOnWhatsApp(placedOrder, invoiceBlob, true);
                   }}>
                     💬 Send invoice on WhatsApp
                   </button>
