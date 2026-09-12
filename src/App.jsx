@@ -202,6 +202,8 @@ function AppContent() {
   const [instructions, setInstructions] = useState('')
   const [location, setLocation] = useState(null)
   const [placingOrder, setPlacingOrder] = useState(false)
+  const [paymentLoading, setPaymentLoading] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('razorpay') // 'razorpay' | 'cod'
   const [placedOrder, setPlacedOrder] = useState(null)
   const [detailsModalOpen, setDetailsModalOpen] = useState(false)
   const [locating, setLocating] = useState(false)
@@ -1012,8 +1014,61 @@ function AppContent() {
     });
   };
 
-  // Checkout redirect and database placement
-  const placeOrder = async () => {
+  // Helper: Dynamically load Razorpay checkout.js SDK from CDN
+  const loadRazorpaySDK = () => {
+    return new Promise((resolve, reject) => {
+      if (window.Razorpay) { resolve(true); return; }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+      document.body.appendChild(script);
+    });
+  };
+
+  // Helper: Upload invoice canvas image to server
+  const uploadInvoiceCanvas = async (orderId, orderPayload) => {
+    try {
+      const canvas = await generateInvoiceCanvas(orderId, orderPayload);
+      await new Promise((resolveUpload) => {
+        canvas.toBlob(async (blob) => {
+          if (!blob) { resolveUpload(); return; }
+          const formData = new FormData();
+          formData.append('image', blob, `invoice_${orderId}.png`);
+          try {
+            const uploadRes = await fetch(`/api/orders/${orderId}/upload-summary`, {
+              method: 'POST', body: formData
+            });
+            if (!uploadRes.ok) console.warn('Invoice upload warning');
+          } catch (uploadErr) {
+            console.error('Invoice upload error:', uploadErr);
+          }
+          resolveUpload();
+        }, 'image/png');
+      });
+    } catch (err) {
+      console.error('Canvas error:', err);
+    }
+  };
+
+  // Helper: Clear cart after order
+  const clearCartAfterOrder = async () => {
+    setQuantities({});
+    setAppliedCoupon(null);
+    setCouponCode('');
+    try {
+      await fetch(`/api/cart/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [], couponCode: '' })
+      });
+    } catch (cartErr) {
+      console.error('Failed to clear cart:', cartErr);
+    }
+  };
+
+  // Main payment initiation — called after customer details are confirmed
+  const initiatePayment = async () => {
     if (!canPlace) {
       if (!meetsMinOrder) {
         toast.error(`Minimum order amount is ₹${minOrderAmount}. Please add items worth ₹${shortfallMin} more.`)
@@ -1027,15 +1082,13 @@ function AppContent() {
       return
     }
 
-    setPlacingOrder(true)
-    
-    // Build address and custom instructions info
-    let combinedAddress = address
+    // Build combined address with instructions + live location
+    let combinedAddress = address;
     if (instructions && instructions.trim()) {
-      combinedAddress += `\nInstructions: ${instructions.trim()}`
+      combinedAddress += `\nInstructions: ${instructions.trim()}`;
     }
     if (location) {
-      combinedAddress += `\n📍 Live Location: ${location}`
+      combinedAddress += `\n📍 Live Location: ${location}`;
     }
 
     const orderPayload = {
@@ -1053,85 +1106,131 @@ function AppContent() {
       deliveryFee: deliveryCharge,
       total,
       couponCode: appliedCoupon ? appliedCoupon.code : ''
-    }
+    };
 
-    try {
-      // 1. Save order in MongoDB
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
-      })
-      const savedOrder = await res.json()
-
-      if (!res.ok) {
-        throw new Error(savedOrder.message || 'Failed to place order')
-      }
-
-      // 2. Generate and upload Canvas Summary Image
-      const canvas = await generateInvoiceCanvas(savedOrder.orderId, orderPayload)
-      
-      await new Promise((resolveUpload, rejectUpload) => {
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            rejectUpload(new Error('Failed to create canvas blob'))
-            return
-          }
-          const formData = new FormData()
-          formData.append('image', blob, `invoice_${savedOrder.orderId}.png`)
-          
-          try {
-            const uploadRes = await fetch(`/api/orders/${savedOrder.orderId}/upload-summary`, {
-              method: 'POST',
-              body: formData
-            })
-            if (!uploadRes.ok) {
-              console.warn('Invoice image upload warning, relying on default status tracker.')
-            }
-            resolveUpload()
-          } catch (uploadErr) {
-            console.error('Invoice image upload error:', uploadErr)
-            resolveUpload() // Proceed anyway even if summary image fails
-          }
-        }, 'image/png')
-      })
-
-      // 3. Clear cart
-      setQuantities({})
-      setAppliedCoupon(null)
-      setCouponCode('')
+    // ── COD Path ──
+    if (selectedPaymentMethod === 'cod') {
+      setPaymentLoading(true);
       try {
-        await fetch(`/api/cart/${sessionId}`, {
+        const res = await fetch('/api/payments/cod-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: [], couponCode: '' })
-        })
-      } catch (cartErr) {
-        console.error('Failed to clear cart in db:', cartErr)
-      }
+          body: JSON.stringify({ orderPayload })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to place COD order');
 
-      // 4. Save placed order and open confirmation overlay
-      setPlacedOrder(savedOrder)
-      toast.success('Order placed successfully in our system!')
-      
-      // Auto open WhatsApp Link
-      let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
-      if (savedOrder.imageUrl) {
-        waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
+        const savedOrder = data.order;
+        await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
+        await clearCartAfterOrder();
+        setPlacedOrder(savedOrder);
+        toast.success('COD Order placed! Please confirm on WhatsApp.');
+      } catch (err) {
+        console.error(err);
+        toast.error(err.message || 'Failed to place COD order');
+      } finally {
+        setPaymentLoading(false);
       }
-      if (location) {
-        waMsg += `\n\n📍 Live Location: ${location}`;
-      }
-      const encodedMsg = encodeURIComponent(waMsg)
-      window.open(`https://wa.me/${whatsappNumber}?text=${encodedMsg}`, '_blank')
+      return;
+    }
+
+    // ── Razorpay Path ──
+    setPaymentLoading(true);
+    try {
+      // Step 1: Load Razorpay SDK
+      await loadRazorpaySDK();
+
+      // Step 2: Create Razorpay order on server
+      const createRes = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: total, currency: 'INR' })
+      });
+      const createData = await createRes.json();
+      if (!createRes.ok) throw new Error(createData.message || 'Failed to initiate payment');
+
+      const { razorpayOrderId, amount: rzpAmount, currency, keyId } = createData;
+      setPaymentLoading(false);
+
+      // Step 3: Open Razorpay Checkout Modal
+      await new Promise((resolvePayment, rejectPayment) => {
+        const options = {
+          key: keyId,
+          amount: rzpAmount,
+          currency,
+          name: 'MoodFresher',
+          description: `Order — ₹${total}`,
+          image: 'https://i.ibb.co/your-logo', // optional
+          order_id: razorpayOrderId,
+          prefill: {
+            name: name,
+            contact: mobile,
+          },
+          theme: {
+            color: '#d4a24c',
+          },
+          modal: {
+            ondismiss: () => {
+              toast.info('Payment cancelled. You can try again.');
+              rejectPayment(new Error('dismissed'));
+            }
+          },
+          handler: async (response) => {
+            // Step 4: Verify payment on server + create DB order
+            setPlacingOrder(true);
+            try {
+              const verifyRes = await fetch('/api/payments/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                  orderPayload,
+                })
+              });
+              const verifyData = await verifyRes.json();
+              if (!verifyRes.ok) throw new Error(verifyData.message || 'Payment verification failed');
+
+              const savedOrder = verifyData.order;
+              await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
+              await clearCartAfterOrder();
+              setPlacedOrder(savedOrder);
+              toast.success('Payment successful! Order confirmed 🎉');
+              resolvePayment();
+            } catch (err) {
+              console.error('Verify error:', err);
+              toast.error(err.message || 'Payment verification failed. Contact support.');
+              rejectPayment(err);
+            } finally {
+              setPlacingOrder(false);
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', (response) => {
+          console.error('Payment failed:', response.error);
+          toast.error(`Payment failed: ${response.error.description || 'Please try again.'}`);
+          rejectPayment(new Error('payment_failed'));
+        });
+        rzp.open();
+      });
 
     } catch (err) {
-      console.error(err)
-      toast.error(err.message || 'Network error placing order')
-    } finally {
-      setPlacingOrder(false)
+      if (err.message !== 'dismissed' && err.message !== 'payment_failed') {
+        console.error(err);
+        toast.error(err.message || 'Payment error. Please try again.');
+      }
+      setPaymentLoading(false);
+      setPlacingOrder(false);
     }
   }
+
+  // Keep placeOrder as alias for backward compat (not used externally)
+  const placeOrder = initiatePayment;
+
+
 
   const cartCount = orderLines.reduce((s, it) => s + it.qty, 0)
 
@@ -1797,6 +1896,42 @@ function AppContent() {
           🚫 Sorry for the inconvenience, we do not deliver beyond {maxDeliveryDistance} km.
         </div>
       )}
+
+      {/* Payment Method Selector */}
+      {orderLines.length > 0 && isOpen && (
+        <div className="payment-method-selector">
+          <div className="payment-method-title">💳 Payment Method</div>
+          <div className="payment-method-options">
+            <button
+              className={`payment-method-option ${selectedPaymentMethod === 'razorpay' ? 'selected' : ''}`}
+              onClick={() => setSelectedPaymentMethod('razorpay')}
+              type="button"
+            >
+              <span className="payment-method-icon">💳</span>
+              <span className="payment-method-label">
+                <strong>Pay Online</strong>
+                <small>Card, UPI, Net Banking, QR</small>
+              </span>
+              {selectedPaymentMethod === 'razorpay' && <span className="payment-method-check">✓</span>}
+            </button>
+            {settings?.codEnabled && (
+              <button
+                className={`payment-method-option ${selectedPaymentMethod === 'cod' ? 'selected' : ''}`}
+                onClick={() => setSelectedPaymentMethod('cod')}
+                type="button"
+              >
+                <span className="payment-method-icon">💵</span>
+                <span className="payment-method-label">
+                  <strong>Cash on Delivery</strong>
+                  <small>Pay when order arrives</small>
+                </span>
+                {selectedPaymentMethod === 'cod' && <span className="payment-method-check">✓</span>}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <button
         className="place-btn enabled"
         onClick={() => {
@@ -1817,20 +1952,42 @@ function AppContent() {
           if (!hasDetails) {
             setDetailsModalOpen(true)
           } else {
-            placeOrder()
+            initiatePayment()
           }
         }}
-        disabled={false}
+        disabled={paymentLoading || placingOrder}
       >
-        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-          Place order
-        </div>
+        {paymentLoading ? (
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+            <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            Preparing Payment...
+          </div>
+        ) : placingOrder ? (
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+            <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            Confirming Order...
+          </div>
+        ) : selectedPaymentMethod === 'cod' ? (
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+            <span>💵</span>
+            Place COD Order — ₹{total}
+          </div>
+        ) : (
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+            <span>💳</span>
+            Pay Now — ₹{total}
+          </div>
+        )}
       </button>
+      {orderLines.length > 0 && selectedPaymentMethod === 'razorpay' && (
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          🔒 Secured by Razorpay · UPI · Cards · Net Banking
+        </div>
+      )}
     </>
   )
+
+
 
   const renderMenuGrid = (itemsList) => (
     <div className="menu-grid">
@@ -2701,6 +2858,7 @@ function AppContent() {
                           <th>Mobile</th>
                           <th>Items</th>
                           <th>Total (₹)</th>
+                          <th>Payment</th>
                           <th>Status</th>
                           <th>Date</th>
                           <th>Actions</th>
@@ -2716,6 +2874,15 @@ function AppContent() {
                             <td>{order.customerMobile}</td>
                             <td>{order.items.reduce((s, i) => s + i.qty, 0)}</td>
                             <td style={{ fontWeight: 'bold' }}>₹{order.total}</td>
+                            <td>
+                              {order.paymentStatus === 'Paid' ? (
+                                <span className="admin-badge admin-badge-success" style={{ background: '#059669', color: '#fff' }}>💳 Paid</span>
+                              ) : order.paymentMethod === 'cod' ? (
+                                <span className="admin-badge" style={{ background: '#d97706', color: '#fff' }}>💵 COD</span>
+                              ) : (
+                                <span className="admin-badge admin-badge-danger">⏳ {order.paymentStatus || 'Pending'}</span>
+                              )}
+                            </td>
                             <td>
                               <span className={`admin-badge status-${order.status.toLowerCase()}`}>
                                 {order.status}
@@ -3016,6 +3183,21 @@ function AppContent() {
                         onChange={e => setSettings({ ...settings, maxDeliveryDistance: parseInt(e.target.value) || 0 })}
                         required
                       />
+                    </div>
+
+                    <div className="checkbox-group" style={{ marginTop: 16, marginBottom: 16, padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 8, border: '1px solid var(--border-default)' }}>
+                      <input
+                        type="checkbox"
+                        id="cod-enabled"
+                        checked={settings.codEnabled || false}
+                        onChange={e => setSettings({ ...settings, codEnabled: e.target.checked })}
+                      />
+                      <label htmlFor="cod-enabled" style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+                        💵 Enable Cash on Delivery (COD)
+                      </label>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, marginLeft: 24 }}>
+                        When disabled, customers can only pay online via Razorpay.
+                      </div>
                     </div>
 
                     <h4 style={{ marginTop: 24, marginBottom: 8, fontSize: 15 }}>⏰ Kitchen Operating Hours</h4>

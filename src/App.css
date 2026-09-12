@@ -543,10 +543,15 @@ a.contact-value { color: var(--gold); font-weight: 600; }
 }
 
 /* ===== 29. PRINT STYLES ===== */
-@media print {
-  .topbar, .bottom-bar, .nav-drawer, .hamburger, .wa-btn, .site-footer, .toast-container { display: none !important; }
-  .content { padding: 0; display: block; }
-  .order-panel { display: block !important; break-inside: avoid; border: 2px solid #000; box-shadow: none; }
-  body { background: #fff; color: #000; }
-  .menu-card { break-inside: avoid; }
-}
+/* ===== 30. PAYMENT METHOD SELECTOR STYLES ===== */
+.payment-method-selector { margin-top: 16px; margin-bottom: 12px; }
+.payment-method-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; letter-spacing: 0.2px; }
+.payment-method-options { display: flex; flex-direction: column; gap: 8px; }
+.payment-method-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-subtle); background: rgba(255,255,255,0.02); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); text-align: left; width: 100%; }
+.payment-method-option:hover { background: rgba(212,162,76,0.04); border-color: var(--border-default); }
+.payment-method-option.selected { border-color: var(--gold); background: rgba(212,162,76,0.08); box-shadow: 0 0 12px rgba(212,162,76,0.12); }
+.payment-method-icon { font-size: 20px; flex-shrink: 0; }
+.payment-method-label { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.payment-method-label strong { font-size: 13px; color: var(--text-primary); }
+.payment-method-label small { font-size: 10.5px; color: var(--text-secondary); margin-top: 1px; }
+.payment-method-check { font-weight: 800; color: var(--gold-light); font-size: 15px; margin-left: auto; }

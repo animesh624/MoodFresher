@@ -36,6 +36,11 @@ const settingsSchema = new mongoose.Schema(
       type: Number,
       default: 200,
     },
+    // ── Payment Settings ──
+    codEnabled: {
+      type: Boolean,
+      default: false, // Cash on Delivery disabled by default
+    },
   },
   {
     timestamps: true,

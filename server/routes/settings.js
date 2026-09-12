@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 // @route   PUT /api/settings
 // @access  Private
 router.put('/', protect, async (req, res) => {
-  const { shopOpen, maxDeliveryDistance, operatingHours, whatsappNumber, minOrderAmount } = req.body;
+  const { shopOpen, maxDeliveryDistance, operatingHours, whatsappNumber, minOrderAmount, codEnabled } = req.body;
 
   try {
     let settings = await Settings.findOne({});
@@ -36,6 +36,7 @@ router.put('/', protect, async (req, res) => {
     settings.maxDeliveryDistance = maxDeliveryDistance !== undefined ? maxDeliveryDistance : settings.maxDeliveryDistance;
     settings.whatsappNumber = whatsappNumber !== undefined ? whatsappNumber : settings.whatsappNumber;
     settings.minOrderAmount = minOrderAmount !== undefined ? minOrderAmount : settings.minOrderAmount;
+    settings.codEnabled = codEnabled !== undefined ? codEnabled : settings.codEnabled;
 
     if (operatingHours) {
       settings.operatingHours = {
