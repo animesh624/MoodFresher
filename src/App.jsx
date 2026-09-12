@@ -1051,6 +1051,36 @@ function AppContent() {
     }
   };
 
+  // Helper: Automatically redirect customer to WhatsApp with complete order text
+  const triggerWhatsAppRedirect = (savedOrder) => {
+    try {
+      const waNum = settings?.whatsappNumber || whatsappNumber || '918736066574';
+      let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nPayment Status: ${savedOrder.paymentStatus || 'Paid'}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
+      if (savedOrder.imageUrl) {
+        waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
+      }
+      let currentLoc = location;
+      if (!currentLoc && savedOrder.customerAddress) {
+        const match = savedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
+        if (match) {
+          currentLoc = match[1];
+        }
+      }
+      if (currentLoc) {
+        waMsg += `\n\n📍 Live Location: ${currentLoc}`;
+      }
+      const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`;
+      
+      // Try opening in new tab or fallback to current window redirect
+      const newWin = window.open(targetUrl, '_blank');
+      if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+        window.location.href = targetUrl;
+      }
+    } catch (err) {
+      console.error('WhatsApp auto redirect error:', err);
+    }
+  };
+
   // Helper: Clear cart after order
   const clearCartAfterOrder = async () => {
     setQuantities({});
@@ -1124,7 +1154,8 @@ function AppContent() {
         await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
         await clearCartAfterOrder();
         setPlacedOrder(savedOrder);
-        toast.success('COD Order placed! Please confirm on WhatsApp.');
+        toast.success('COD Order placed! Redirecting to WhatsApp...');
+        triggerWhatsAppRedirect(savedOrder);
       } catch (err) {
         console.error(err);
         toast.error(err.message || 'Failed to place COD order');
@@ -1196,7 +1227,8 @@ function AppContent() {
               await uploadInvoiceCanvas(savedOrder.orderId, orderPayload);
               await clearCartAfterOrder();
               setPlacedOrder(savedOrder);
-              toast.success('Payment successful! Order confirmed 🎉');
+              toast.success('Payment successful! Redirecting to WhatsApp 🎉');
+              triggerWhatsAppRedirect(savedOrder);
               resolvePayment();
             } catch (err) {
               console.error('Verify error:', err);
@@ -2614,7 +2646,7 @@ function AppContent() {
                 <form onSubmit={(e) => {
                   e.preventDefault();
                   setDetailsModalOpen(false);
-                  placeOrder();
+                  initiatePayment();
                 }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   
                   <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
