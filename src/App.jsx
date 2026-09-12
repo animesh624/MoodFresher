@@ -2530,11 +2530,10 @@ function AppContent() {
                   )}
                 </div>
                 <button className="bottom-bar-btn" onClick={() => {
+                  scrollToOrderPanel()
                   const hasDetails = name.trim() && mobile.trim() && address.trim()
                   if (!hasDetails) {
                     setDetailsModalOpen(true)
-                  } else {
-                    scrollToOrderPanel()
                   }
                 }}>
                   View Cart →
