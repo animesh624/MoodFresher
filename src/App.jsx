@@ -1064,34 +1064,36 @@ function AppContent() {
     }
   };
 
-  // Helper: Automatically redirect customer to WhatsApp with complete order text
-  const triggerWhatsAppRedirect = (savedOrder) => {
-    try {
-      const waNum = settings?.whatsappNumber || whatsappNumber || '918736066574';
-      let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nPayment Status: ${savedOrder.paymentStatus || 'Paid'}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
-      if (savedOrder.imageUrl) {
-        waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
-      }
-      let currentLoc = location;
-      if (!currentLoc && savedOrder.customerAddress) {
-        const match = savedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
-        if (match) {
-          currentLoc = match[1];
+  // Helper: Automatically redirect customer to WhatsApp after a short delay (so success modal displays first)
+  const triggerWhatsAppRedirect = (savedOrder, delayMs = 2500) => {
+    setTimeout(() => {
+      try {
+        const waNum = settings?.whatsappNumber || whatsappNumber || '918736066574';
+        let waMsg = `Hello! I placed a new order on MoodFresher.\nOrder ID: ${savedOrder.orderId}\nPayment Status: ${savedOrder.paymentStatus || 'Paid'}\nTotal: ₹${savedOrder.total}\n\nTrack order live & view invoice details here:\n${window.location.origin}/order/${savedOrder.orderId}`;
+        if (savedOrder.imageUrl) {
+          waMsg += `\n\nSecure Invoice Image: ${savedOrder.imageUrl}`;
         }
+        let currentLoc = location;
+        if (!currentLoc && savedOrder.customerAddress) {
+          const match = savedOrder.customerAddress.match(/(?:📍\s*)?Live Location:\s*(https?:\/\/[^\s]+)/);
+          if (match) {
+            currentLoc = match[1];
+          }
+        }
+        if (currentLoc) {
+          waMsg += `\n\n📍 Live Location: ${currentLoc}`;
+        }
+        const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`;
+        
+        // Try opening in new tab or fallback to current window redirect
+        const newWin = window.open(targetUrl, '_blank');
+        if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+          window.location.href = targetUrl;
+        }
+      } catch (err) {
+        console.error('WhatsApp auto redirect error:', err);
       }
-      if (currentLoc) {
-        waMsg += `\n\n📍 Live Location: ${currentLoc}`;
-      }
-      const targetUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`;
-      
-      // Try opening in new tab or fallback to current window redirect
-      const newWin = window.open(targetUrl, '_blank');
-      if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-        window.location.href = targetUrl;
-      }
-    } catch (err) {
-      console.error('WhatsApp auto redirect error:', err);
-    }
+    }, delayMs);
   };
 
   // Helper: Clear cart after order
@@ -2588,9 +2590,9 @@ function AppContent() {
                   border: '1px solid rgba(37, 211, 102, 0.2)',
                   color: '#25D366'
                 }}>🎉</span>
-                <h2 style={{ color: 'var(--gold-light)', fontSize: '22px', marginBottom: '12px' }}>Order Successfully Placed!</h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6', marginBottom: '20px' }}>
-                  Your order has been saved. To confirm and place the order with our kitchen, please click <strong>"Confirm on WhatsApp"</strong> below.
+                <h2 style={{ color: 'var(--gold-light)', fontSize: '22px', marginBottom: '8px' }}>Order Successfully Placed! 🎉</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px', textAlign: 'center' }}>
+                  Your order has been confirmed! You are being automatically redirected to WhatsApp in <strong>2-3 seconds</strong>...
                 </p>
 
                 <div style={{
